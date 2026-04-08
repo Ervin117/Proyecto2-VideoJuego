@@ -140,6 +140,7 @@ int main_theme_durations[] = {
   NEGRA, CORCHEA, NEGRA, CORCHEA, NEGRA, CORCHEA, NEGRA, CORCHEA, NEGRA, CORCHEA, REDONDA
 };
 
+
 int cantina_notes[] = {
   // Frase 1
   NOTE_A4, NOTE_D5, NOTE_A4, NOTE_D5, NOTE_A4, NOTE_D5, NOTE_A4, NOTE_GS4, NOTE_A4,0,
@@ -340,24 +341,9 @@ int asteroid_durations[] = {
   NEGRA_F, NEGRA_F
 };
 
-int select_char_notes[] = {NOTE_A3, NOTE_E4, NOTE_A4};
-int select_char_durations[] = {CORCHEA_F, CORCHEA_F, NEGRA_F};
+int blaster_notes[] = {NOTE_AS5, NOTE_G5, NOTE_E5, NOTE_C5};
+int blaster_durations[] = {SEMICORCHEA_F/2, SEMICORCHEA_F/2, SEMICORCHEA_F/2, SEMICORCHEA_F/2};
 
-int ship_engine_notes[] = {NOTE_B2, NOTE_B3, NOTE_B2, NOTE_B1};
-int ship_engine_durations[] = {SEMICORCHEA_F, SEMICORCHEA_F, SEMICORCHEA_F, SEMICORCHEA_F};
-
-int blaster_notes[] = {
-  NOTE_C7, NOTE_AS6, NOTE_GS6, NOTE_FS6, NOTE_E6, NOTE_D6, NOTE_C6
-};
-
-int blaster_durations[] = {
-  SEMICORCHEA_F/4, SEMICORCHEA_F/4, SEMICORCHEA_F/4,
-  SEMICORCHEA_F/4, SEMICORCHEA_F/4, SEMICORCHEA_F/4,
-  SEMICORCHEA_F/4
-};
-
-int explosion_notes[] = {NOTE_B2, NOTE_C1, NOTE_CS2, NOTE_REST, NOTE_C1};
-int explosion_durations[] = {CORCHEA_F, SEMICORCHEA_F, SEMICORCHEA_F, SEMICORCHEA_F, BLANCA_F};
 
 
 /* USER CODE END PV */
@@ -474,20 +460,15 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //Inicializo el timer y el canal correspondiente
-  playTone(main_theme_notes, main_theme_durations, NULL, (sizeof(main_theme_notes)/sizeof(main_theme_notes[0])));
-  playTone(cantina_notes, cantina_durations, NULL, (sizeof(cantina_notes)/sizeof(cantina_notes[0])));
-  playTone(imperial_notes, imperial_durations, NULL, (sizeof(imperial_notes)/sizeof(imperial_notes[0])));
-  playTone(falcon_notes, falcon_durations, NULL, (sizeof(falcon_notes)/sizeof(falcon_notes[0])));
+  //playTone(main_theme_notes, main_theme_durations, NULL, (sizeof(main_theme_notes)/sizeof(main_theme_notes[0])));
+  //playTone(cantina_notes, cantina_durations, NULL, (sizeof(cantina_notes)/sizeof(cantina_notes[0])));
+  //playTone(imperial_notes, imperial_durations, NULL, (sizeof(imperial_notes)/sizeof(imperial_notes[0])));
+  //playTone(falcon_notes, falcon_durations, NULL, (sizeof(falcon_notes)/sizeof(falcon_notes[0])));
   //playTone(asteroid_notes, asteroid_durations, NULL, (sizeof(asteroid_notes)/sizeof(asteroid_notes[0])));
   playTone(blaster_notes, blaster_durations, NULL, (sizeof(blaster_notes)/sizeof(blaster_notes[0])));
-  playTone(select_char_notes, select_char_durations, NULL, (sizeof(select_char_notes)/sizeof(select_char_notes[0])));
- playTone(ship_engine_notes, ship_engine_durations, NULL, (sizeof(ship_engine_notes)/sizeof(ship_engine_notes[0])));
-  playTone(explosion_notes, explosion_durations, NULL, (sizeof(explosion_notes)/sizeof(explosion_notes[0])));
   noTone(); //pausa
   while (1)
   {
-
-
 
     /* USER CODE END WHILE */
 

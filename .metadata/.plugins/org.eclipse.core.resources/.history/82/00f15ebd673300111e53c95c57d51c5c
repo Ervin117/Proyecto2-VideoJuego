@@ -89,18 +89,19 @@ UART_HandleTypeDef huart2;
 
 //================ Para reproducir música=================
 int main_theme_notes[] = {
-  // --- Tema Principal (Frase 1) ---
+  // --- Frase 1 ---
   NOTE_F4, NOTE_F4, NOTE_F4, NOTE_AS4, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS5, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS5, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_DS5, NOTE_C5,
 
-  // Frase 2
+  // --- Frase 2 ---
   NOTE_F4, NOTE_F4, NOTE_F4, NOTE_AS4, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS5, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS5, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_DS5, NOTE_C5,
-  // Frase 3
+
+  // --- Frase 3 (El puente) ---
   NOTE_F4, NOTE_F4, NOTE_G4, NOTE_G4,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS4, NOTE_AS4, NOTE_C5, NOTE_D5, NOTE_C5, NOTE_G4, NOTE_A4,
 
@@ -110,34 +111,35 @@ int main_theme_notes[] = {
   NOTE_F4, NOTE_F4, NOTE_G4, NOTE_G4,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS4, NOTE_AS4, NOTE_C5, NOTE_D5, NOTE_C5, NOTE_G4, NOTE_A4,
 
-  // Frase final
+  // --- Frase Final ---
   NOTE_F5, NOTE_F5, NOTE_AS5, NOTE_GS5, NOTE_FS5, NOTE_F5, NOTE_DS5, NOTE_CS5, NOTE_C5, NOTE_AS4, NOTE_F5
-
 };
 
 int main_theme_durations[] = {
-  // Tema Principal (Frase 1)
-  CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
-  CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
-  CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
-  CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA,
-  // (Frase 2)
-  CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
-  CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
-  CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
-  CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA,
+  // Frase 1: Uso de Tresillos para el "galope"
+  TRESILLO, TRESILLO, TRESILLO, BLANCA + NEGRA, BLANCA + NEGRA,
+  TRESILLO, TRESILLO, TRESILLO, BLANCA + NEGRA, BLANCA + NEGRA,
+  TRESILLO, TRESILLO, TRESILLO, BLANCA + NEGRA, BLANCA + NEGRA,
+  TRESILLO, TRESILLO, TRESILLO, BLANCA + NEGRA,
 
-  NEGRA, NEGRA, BLANCA + NEGRA, NEGRA,
+  // Frase 2
+  TRESILLO, TRESILLO, TRESILLO, BLANCA + NEGRA, BLANCA + NEGRA,
+  TRESILLO, TRESILLO, TRESILLO, BLANCA + NEGRA, BLANCA + NEGRA,
+  TRESILLO, TRESILLO, TRESILLO, BLANCA + NEGRA, BLANCA + NEGRA,
+  TRESILLO, TRESILLO, TRESILLO, BLANCA + NEGRA,
+
+  // Frase 3: Ritmo más pausado
+  NEGRA, NEGRA, BLANCA, NEGRA,
   CORCHEA, CORCHEA, CORCHEA, CORCHEA, TRESILLO, TRESILLO, TRESILLO, CORCHEA, CORCHEA, NEGRA,
 
-  NEGRA, NEGRA, BLANCA + NEGRA, NEGRA,
-  CORCHEA, CORCHEA, CORCHEA, CORCHEA, NEGRA, NEGRA,
+  NEGRA, NEGRA, BLANCA, NEGRA,
+  CORCHEA, CORCHEA, CORCHEA, CORCHEA, BLANCA, BLANCA,
 
-  NEGRA, NEGRA, BLANCA + NEGRA, NEGRA,
+  NEGRA, NEGRA, BLANCA, NEGRA,
   CORCHEA, CORCHEA, CORCHEA, CORCHEA, TRESILLO, TRESILLO, TRESILLO, CORCHEA, CORCHEA, NEGRA,
 
-  // Frase final
-  NEGRA, CORCHEA, NEGRA, CORCHEA, NEGRA, CORCHEA, NEGRA, CORCHEA, NEGRA, CORCHEA, REDONDA
+  // Frase Final: Sincopado heroico
+  NEGRA, CORCHEA, SEMICORCHEA, NEGRA, CORCHEA, SEMICORCHEA, NEGRA, CORCHEA, SEMICORCHEA, NEGRA, REDONDA
 };
 
 int cantina_notes[] = {
@@ -475,14 +477,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //Inicializo el timer y el canal correspondiente
   playTone(main_theme_notes, main_theme_durations, NULL, (sizeof(main_theme_notes)/sizeof(main_theme_notes[0])));
-  playTone(cantina_notes, cantina_durations, NULL, (sizeof(cantina_notes)/sizeof(cantina_notes[0])));
-  playTone(imperial_notes, imperial_durations, NULL, (sizeof(imperial_notes)/sizeof(imperial_notes[0])));
-  playTone(falcon_notes, falcon_durations, NULL, (sizeof(falcon_notes)/sizeof(falcon_notes[0])));
+  //playTone(cantina_notes, cantina_durations, NULL, (sizeof(cantina_notes)/sizeof(cantina_notes[0])));
+  //playTone(imperial_notes, imperial_durations, NULL, (sizeof(imperial_notes)/sizeof(imperial_notes[0])));
+  //playTone(falcon_notes, falcon_durations, NULL, (sizeof(falcon_notes)/sizeof(falcon_notes[0])));
   //playTone(asteroid_notes, asteroid_durations, NULL, (sizeof(asteroid_notes)/sizeof(asteroid_notes[0])));
-  playTone(blaster_notes, blaster_durations, NULL, (sizeof(blaster_notes)/sizeof(blaster_notes[0])));
-  playTone(select_char_notes, select_char_durations, NULL, (sizeof(select_char_notes)/sizeof(select_char_notes[0])));
- playTone(ship_engine_notes, ship_engine_durations, NULL, (sizeof(ship_engine_notes)/sizeof(ship_engine_notes[0])));
-  playTone(explosion_notes, explosion_durations, NULL, (sizeof(explosion_notes)/sizeof(explosion_notes[0])));
+  //playTone(blaster_notes, blaster_durations, NULL, (sizeof(blaster_notes)/sizeof(blaster_notes[0])));
+  //playTone(select_char_notes, select_char_durations, NULL, (sizeof(select_char_notes)/sizeof(select_char_notes[0])));
+ //playTone(ship_engine_notes, ship_engine_durations, NULL, (sizeof(ship_engine_notes)/sizeof(ship_engine_notes[0])));
+ // playTone(explosion_notes, explosion_durations, NULL, (sizeof(explosion_notes)/sizeof(explosion_notes[0])));
   noTone(); //pausa
   while (1)
   {
