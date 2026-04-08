@@ -32,6 +32,7 @@
 #define VALOR_PERIODO 100
 
 // Forma para comparar más fácil con una partitura
+// Para star wars main theme
 #define TEMPO 150
 #define NEGRA (60000 / TEMPO)
 
@@ -41,7 +42,6 @@
 #define TRESILLO (NEGRA / 3)
 #define SEMICORCHEA (NEGRA / 4)
 
-
 // para cantina
 #define TEMPO_CANTINA 150
 #define NEGRA_C (60000 / TEMPO_CANTINA)
@@ -50,13 +50,23 @@
 #define SEMICORCHEA_C (NEGRA_C / 4)
 #define SEPTICILLO_C (NEGRA_C / 7)
 
-// para duel of the fades
-#define TEMPO_DUEL 200
-#define NEGRA_D (60000 / TEMPO_DUEL)
-#define CORCHEA_D (NEGRA_D / 2)
-#define TRESILLO_D (NEGRA_D / 3)
-#define SEMICORCHEA_D (NEGRA_D / 4)
-#define SEPTICILLO_D (NEGRA_D / 7)
+// para marcha imperial
+#define TEMPO_MARCHA 80
+#define BLANCA_M    (NEGRA_M * 2)
+#define NEGRA_M (60000 / TEMPO_MARCHA)
+#define CORCHEA_M (NEGRA_M / 2)
+#define TRESILLO_M (NEGRA_M / 3)
+#define SEMICORCHEA_M (NEGRA_M / 4)
+#define SEPTICILLO_M (NEGRA_M / 14)
+
+// para fondo juego
+#define TEMPO_FALCON 150
+#define BLANCA_F    (NEGRA_F * 2)
+#define NEGRA_F (60000 / TEMPO_FALCON)
+#define CORCHEA_F (NEGRA_F / 2)
+#define TRESILLO_F (NEGRA_F / 3)
+#define SEMICORCHEA_F (NEGRA_F / 4)
+#define SEPTICILLO_F (NEGRA_F / 14)
 
 /* USER CODE END PTD */
 
@@ -78,7 +88,7 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 
 //================ Para reproducir música=================
-int notes2[] = {
+int main_theme_notes[] = {
   // --- Tema Principal (Frase 1) ---
   NOTE_F4, NOTE_F4, NOTE_F4, NOTE_AS4, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS5, NOTE_F5,
@@ -105,7 +115,7 @@ int notes2[] = {
 
 };
 
-int durations2[] = {
+int main_theme_durations[] = {
   // Tema Principal (Frase 1)
   CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
   CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
@@ -129,7 +139,6 @@ int durations2[] = {
   // Frase final
   NEGRA, CORCHEA, NEGRA, CORCHEA, NEGRA, CORCHEA, NEGRA, CORCHEA, NEGRA, CORCHEA, REDONDA
 };
-
 
 int cantina_notes[] = {
   // Frase 1
@@ -187,31 +196,168 @@ int cantina_durations[] = {
 };
 
 
-int duel_notes[] = {
-  NOTE_G5, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
-  NOTE_G5, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
-  NOTE_G5, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
-  NOTE_G5, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
-  NOTE_G5, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
-  NOTE_G5, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
+int imperial_notes[] = {
+  // --- Principal ---
+  NOTE_A4, 0, NOTE_A4, 0, NOTE_A4,
+  NOTE_F4, NOTE_C5,
+  NOTE_A4, NOTE_F4, NOTE_C5,
+  NOTE_A4,
 
-  NOTE_E5, NOTE_FS5, NOTE_G5, NOTE_A5, NOTE_B4, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
-  NOTE_E5, NOTE_FS5, NOTE_G5, NOTE_A5, NOTE_B4, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
+  // --- Segunda parte ---
+  NOTE_E5, 0, NOTE_E5, 0, NOTE_E5,
+  NOTE_F5, NOTE_C5,
+  NOTE_GS4, NOTE_F4, NOTE_C5,
+  NOTE_A4,
 
+  // --- Desarrollo ---
+  NOTE_A5, 0, NOTE_A4, NOTE_A4,
+  NOTE_A5, NOTE_GS5, NOTE_G5,
+  NOTE_FS5, NOTE_F5, NOTE_FS5,
+  0, NOTE_AS4,
+  NOTE_DS5, NOTE_D5, NOTE_CS5,
+  NOTE_C5, NOTE_B4, NOTE_C5,
+  0, NOTE_F4, NOTE_GS4, NOTE_F4,
+  NOTE_C5, NOTE_A4, NOTE_F4, NOTE_C5,
+  NOTE_A4
 };
 
-int duel_durations[] = {
-  CORCHEA_D, CORCHEA_D, TRESILLO_D, TRESILLO_D, TRESILLO_D,
-  CORCHEA_D, CORCHEA_D, TRESILLO_D, TRESILLO_D, TRESILLO_D,
-  CORCHEA_D, CORCHEA_D, TRESILLO_D, TRESILLO_D, TRESILLO_D,
-  CORCHEA_D, CORCHEA_D, TRESILLO_D, TRESILLO_D, TRESILLO_D,
-  CORCHEA_D, CORCHEA_D, TRESILLO_D, TRESILLO_D, TRESILLO_D,
-  CORCHEA_D, CORCHEA_D, TRESILLO_D, TRESILLO_D, NEGRA_D,
+int imperial_durations[] = {
+  // Motivo Principal
+  NEGRA_M, SEPTICILLO_M, NEGRA_M, SEPTICILLO_M, NEGRA_M,
+  CORCHEA_M, SEMICORCHEA_M,
+  NEGRA_M, CORCHEA_M, SEMICORCHEA_M,
+  BLANCA_M,
 
-  CORCHEA_D, CORCHEA_D, CORCHEA_D, CORCHEA_D, NEGRA_D+NEGRA_D, NEGRA_D, CORCHEA_D, CORCHEA_D, CORCHEA_D,
-  CORCHEA_D, CORCHEA_D, CORCHEA_D, CORCHEA_D, NEGRA_D+NEGRA_D, NEGRA_D, CORCHEA_D, CORCHEA_D, CORCHEA_D,
+  // Segunda parte
+  NEGRA_M, SEPTICILLO_M, NEGRA_M, SEPTICILLO_M, NEGRA_M,
+  CORCHEA_M, SEMICORCHEA_M,
+  NEGRA_M, CORCHEA_M, CORCHEA_M,
+  BLANCA_M,
 
+  // Desarrollo
+  NEGRA_M, SEPTICILLO_M, CORCHEA_M, SEMICORCHEA_M,
+  NEGRA_M, CORCHEA_M, SEMICORCHEA_M,
+  SEMICORCHEA_M, SEMICORCHEA_M, SEMICORCHEA_M,
+  CORCHEA_M, CORCHEA_M,
+  NEGRA_M, CORCHEA_M, SEMICORCHEA_M,
+  SEMICORCHEA_M, SEMICORCHEA_M, SEMICORCHEA_M,
+  SEMICORCHEA_M, CORCHEA_M, NEGRA_M, CORCHEA_M,
+  SEMICORCHEA_M, NEGRA_M, CORCHEA_M, CORCHEA_M,
+  BLANCA_M
 };
+
+int falcon_notes[] = {
+  // --- Intro: El Motor Arranca ---
+  NOTE_G4, NOTE_G4, NOTE_G4,        // Triple golpe rítmico
+  NOTE_C5, NOTE_G4, NOTE_C5,        // Salto de cuarta/quinta
+  NOTE_AS4, NOTE_A4, NOTE_G4, NOTE_F4, // Bajada rápida en escala
+
+  // --- Motivo de Vuelo (Agudo y Heroico) ---
+  NOTE_C5, NOTE_G5,                 // Salto de Quinta (Ascenso)
+  NOTE_F5, NOTE_E5, NOTE_D5,        // Descenso rápido
+  NOTE_G5, NOTE_C5,                 // Regreso a la base
+  NOTE_AS4, NOTE_C5, NOTE_D5,       // Preparando el salto
+
+  // --- Maniobras Evasivas ---
+  NOTE_DS5, NOTE_D5, NOTE_C5,       // Tresillo
+  NOTE_G4, NOTE_GS4, NOTE_AS4,      // Subida cromática
+  NOTE_C5, NOTE_G4, NOTE_AS4,
+  NOTE_C5, NOTE_G5,                 // Clímax de la frase
+
+  // --- Transición para el Loop ---
+  NOTE_F5, NOTE_DS5, NOTE_D5, NOTE_C5,
+  NOTE_G4, NOTE_G4                  // Reinicio de ciclo
+};
+
+int falcon_durations[] = {
+  // Intro
+  TRESILLO_F, TRESILLO_F, TRESILLO_F,
+  NEGRA_F, CORCHEA_F, CORCHEA_F,
+  CORCHEA_F, CORCHEA_F, CORCHEA_F, CORCHEA_F,
+
+  // Motivo de Vuelo
+  BLANCA_F, BLANCA_F,
+  TRESILLO_F, TRESILLO_F, TRESILLO_F,
+  BLANCA_F, NEGRA_F,
+  CORCHEA_F, CORCHEA_F, NEGRA_F,
+
+  // Maniobras
+  TRESILLO_F, TRESILLO_F, TRESILLO_F,
+  TRESILLO_F, TRESILLO_F, TRESILLO_F,
+  CORCHEA_F, CORCHEA_F, NEGRA_F,
+  BLANCA_F, BLANCA_F,
+
+  // Transición
+  CORCHEA_F, CORCHEA_F, CORCHEA_F, CORCHEA_F,
+  NEGRA_F, NEGRA_F
+};
+
+int asteroid_notes[] = {
+  // --- Motivo de Alerta (Tensión) ---
+  NOTE_G4, NOTE_GS4, NOTE_A4,       // Subida de tensión
+  NOTE_AS4, NOTE_REST, NOTE_AS4,    // Golpes secos
+  NOTE_AS4, NOTE_A4, NOTE_GS4,      // Bajada rápida
+  NOTE_G4,                          // Resolución
+
+  // --- El Escape (Ritmo de Galope) ---
+  NOTE_C5, NOTE_C5, NOTE_C5,        // Tresillo de movimiento
+  NOTE_F5, NOTE_C5,                 // Salto heroico
+  NOTE_AS4, NOTE_A4, NOTE_G4,       // Descenso rápido
+  NOTE_C5, NOTE_G4,                 // Regreso
+
+  // --- Sección de Ataque (Aguda) ---
+  NOTE_C6, NOTE_C6, NOTE_C6,        // ¡Cuidado! (Octava alta)
+  NOTE_AS5, NOTE_A5, NOTE_G5,
+  NOTE_F5, NOTE_G5, NOTE_A5,        // Escala ascendente
+  NOTE_AS5, NOTE_C6,
+
+  // --- Cierre de Frase para Loop ---
+  NOTE_G5, NOTE_F5, NOTE_E5, NOTE_D5,
+  NOTE_C5, NOTE_C5                  // Final seco
+};
+
+int asteroid_durations[] = {
+  // Motivo de Alerta
+  TRESILLO_F, TRESILLO_F, TRESILLO_F,
+  NEGRA_F, CORCHEA_F, CORCHEA_F,
+  TRESILLO_F, TRESILLO_F, TRESILLO_F,
+  BLANCA_F,
+
+  // El Escape
+  TRESILLO_F, TRESILLO_F, TRESILLO_F,
+  BLANCA_F, NEGRA_F,
+  TRESILLO_F, TRESILLO_F, TRESILLO_F,
+  BLANCA_F, NEGRA_F,
+
+  // Sección de Ataque
+  CORCHEA_F, CORCHEA_F, CORCHEA_F,
+  TRESILLO_F, TRESILLO_F, TRESILLO_F,
+  CORCHEA_F, CORCHEA_F, CORCHEA_F,
+  NEGRA_F, BLANCA_F,
+
+  // Cierre
+  CORCHEA_F, CORCHEA_F, CORCHEA_F, CORCHEA_F,
+  NEGRA_F, NEGRA_F
+};
+
+int select_char_notes[] = {NOTE_A3, NOTE_E4, NOTE_A4};
+int select_char_durations[] = {CORCHEA_F, CORCHEA_F, NEGRA_F};
+
+int ship_engine_notes[] = {NOTE_B2, NOTE_B3, NOTE_B2, NOTE_B1};
+int ship_engine_durations[] = {SEMICORCHEA_F, SEMICORCHEA_F, SEMICORCHEA_F, SEMICORCHEA_F};
+
+int blaster_notes[] = {
+  NOTE_C7, NOTE_AS6, NOTE_GS6, NOTE_FS6, NOTE_E6, NOTE_D6, NOTE_C6
+};
+
+int blaster_durations[] = {
+  SEMICORCHEA_F/4, SEMICORCHEA_F/4, SEMICORCHEA_F/4,
+  SEMICORCHEA_F/4, SEMICORCHEA_F/4, SEMICORCHEA_F/4,
+  SEMICORCHEA_F/4
+};
+
+int explosion_notes[] = {NOTE_B2, NOTE_C1, NOTE_CS2, NOTE_REST, NOTE_C1};
+int explosion_durations[] = {CORCHEA_F, SEMICORCHEA_F, SEMICORCHEA_F, SEMICORCHEA_F, BLANCA_F};
 
 
 /* USER CODE END PV */
@@ -328,12 +474,20 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //Inicializo el timer y el canal correspondiente
-  //playTone(notes2, durations2, NULL, (sizeof(notes2)/sizeof(notes2[0])));
-  //playTone(cantina_notes, cantina_durations, NULL, (sizeof(cantina_notes)/sizeof(cantina_notes[0])));
-  playTone(duel_notes, duel_durations, NULL, (sizeof(duel_notes)/sizeof(duel_notes[0])));
+  playTone(main_theme_notes, main_theme_durations, NULL, (sizeof(main_theme_notes)/sizeof(main_theme_notes[0])));
+  playTone(cantina_notes, cantina_durations, NULL, (sizeof(cantina_notes)/sizeof(cantina_notes[0])));
+  playTone(imperial_notes, imperial_durations, NULL, (sizeof(imperial_notes)/sizeof(imperial_notes[0])));
+  playTone(falcon_notes, falcon_durations, NULL, (sizeof(falcon_notes)/sizeof(falcon_notes[0])));
+  //playTone(asteroid_notes, asteroid_durations, NULL, (sizeof(asteroid_notes)/sizeof(asteroid_notes[0])));
+  playTone(blaster_notes, blaster_durations, NULL, (sizeof(blaster_notes)/sizeof(blaster_notes[0])));
+  playTone(select_char_notes, select_char_durations, NULL, (sizeof(select_char_notes)/sizeof(select_char_notes[0])));
+ playTone(ship_engine_notes, ship_engine_durations, NULL, (sizeof(ship_engine_notes)/sizeof(ship_engine_notes[0])));
+  playTone(explosion_notes, explosion_durations, NULL, (sizeof(explosion_notes)/sizeof(explosion_notes[0])));
   noTone(); //pausa
   while (1)
   {
+
+
 
     /* USER CODE END WHILE */
 
