@@ -60,8 +60,8 @@ all: main-build
 main-build: Proyecto2STM.elf secondary-outputs
 
 # Tool invocations
-Proyecto2STM.elf Proyecto2STM.map: $(OBJS) $(USER_OBJS) C:\Users\bsmor\OneDrive\Documentos\GitHub\STM32progra\Proyecto2Dig2\Proyecto2STM\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Proyecto2STM.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\bsmor\OneDrive\Documentos\GitHub\STM32progra\Proyecto2Dig2\Proyecto2STM\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Proyecto2STM.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Proyecto2STM.elf Proyecto2STM.map: $(OBJS) $(USER_OBJS) C:\Users\bsmor\OneDrive\Documentos\GitHub\Proyecto2-VideoJuego\Proyecto2Dig2\Proyecto2STM\STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Proyecto2STM.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\bsmor\OneDrive\Documentos\GitHub\Proyecto2-VideoJuego\Proyecto2Dig2\Proyecto2STM\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Proyecto2STM.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

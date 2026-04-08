@@ -51,12 +51,13 @@
 #define SEPTICILLO_C (NEGRA_C / 7)
 
 // para duel of the fades
-#define TEMPO_DUEL 200
-#define NEGRA_D (60000 / TEMPO_DUEL)
-#define CORCHEA_D (NEGRA_D / 2)
-#define TRESILLO_D (NEGRA_D / 3)
-#define SEMICORCHEA_D (NEGRA_D / 4)
-#define SEPTICILLO_D (NEGRA_D / 7)
+#define TEMPO_MARCHA 80
+#define BLANCA_M    (NEGRA_M * 2)
+#define NEGRA_M (60000 / TEMPO_MARCHA)
+#define CORCHEA_M (NEGRA_M / 2)
+#define TRESILLO_M (NEGRA_M / 3)
+#define SEMICORCHEA_M (NEGRA_M / 4)
+#define SEPTICILLO_M (NEGRA_M / 14)
 
 /* USER CODE END PTD */
 
@@ -78,7 +79,7 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 
 //================ Para reproducir música=================
-int notes2[] = {
+int main_theme_notes[] = {
   // --- Tema Principal (Frase 1) ---
   NOTE_F4, NOTE_F4, NOTE_F4, NOTE_AS4, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS5, NOTE_F5,
@@ -105,7 +106,7 @@ int notes2[] = {
 
 };
 
-int durations2[] = {
+int main_theme_durations[] = {
   // Tema Principal (Frase 1)
   CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
   CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
@@ -187,32 +188,55 @@ int cantina_durations[] = {
 };
 
 
-int duel_notes[] = {
-  NOTE_G5, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
-  NOTE_G5, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
-  NOTE_G5, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
-  NOTE_G5, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
-  NOTE_G5, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
-  NOTE_G5, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
+int imperial_notes[] = {
+  // --- Principal ---
+  NOTE_A4, 0, NOTE_A4, 0, NOTE_A4,
+  NOTE_F4, NOTE_C5,
+  NOTE_A4, NOTE_F4, NOTE_C5,
+  NOTE_A4,
 
-  NOTE_E5, NOTE_FS5, NOTE_G5, NOTE_A5, NOTE_B4, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
-  NOTE_E5, NOTE_FS5, NOTE_G5, NOTE_A5, NOTE_B4, NOTE_A5, NOTE_G5, NOTE_FS5, NOTE_E5,
+  // --- Segunda parte ---
+  NOTE_E5, 0, NOTE_E5, 0, NOTE_E5,
+  NOTE_F5, NOTE_C5,
+  NOTE_GS4, NOTE_F4, NOTE_C5,
+  NOTE_A4,
 
+  // --- Desarrollo ---
+  NOTE_A5, 0, NOTE_A4, NOTE_A4,
+  NOTE_A5, NOTE_GS5, NOTE_G5,
+  NOTE_FS5, NOTE_F5, NOTE_FS5,
+  0, NOTE_AS4,
+  NOTE_DS5, NOTE_D5, NOTE_CS5,
+  NOTE_C5, NOTE_B4, NOTE_C5,
+  0, NOTE_F4, NOTE_GS4, NOTE_F4,
+  NOTE_C5, NOTE_A4, NOTE_F4, NOTE_C5,
+  NOTE_A4
 };
 
-int duel_durations[] = {
-  CORCHEA_D, CORCHEA_D, TRESILLO_D, TRESILLO_D, TRESILLO_D,
-  CORCHEA_D, CORCHEA_D, TRESILLO_D, TRESILLO_D, TRESILLO_D,
-  CORCHEA_D, CORCHEA_D, TRESILLO_D, TRESILLO_D, TRESILLO_D,
-  CORCHEA_D, CORCHEA_D, TRESILLO_D, TRESILLO_D, TRESILLO_D,
-  CORCHEA_D, CORCHEA_D, TRESILLO_D, TRESILLO_D, TRESILLO_D,
-  CORCHEA_D, CORCHEA_D, TRESILLO_D, TRESILLO_D, NEGRA_D,
+int imperial_durations[] = {
+  // Motivo Principal
+  NEGRA_M, SEPTICILLO_M, NEGRA_M, SEPTICILLO_M, NEGRA_M,
+  CORCHEA_M, SEMICORCHEA_M,
+  NEGRA_M, CORCHEA_M, SEMICORCHEA_M,
+  BLANCA_M,
 
-  CORCHEA_D, CORCHEA_D, CORCHEA_D, CORCHEA_D, NEGRA_D+NEGRA_D, NEGRA_D, CORCHEA_D, CORCHEA_D, CORCHEA_D,
-  CORCHEA_D, CORCHEA_D, CORCHEA_D, CORCHEA_D, NEGRA_D+NEGRA_D, NEGRA_D, CORCHEA_D, CORCHEA_D, CORCHEA_D,
+  // Segunda parte
+  NEGRA_M, SEPTICILLO_M, NEGRA_M, SEPTICILLO_M, NEGRA_M,
+  CORCHEA_M, SEMICORCHEA_M,
+  NEGRA_M, CORCHEA_M, CORCHEA_M,
+  BLANCA_M,
 
+  // Desarrollo
+  NEGRA_M, SEPTICILLO_M, CORCHEA_M, SEMICORCHEA_M,
+  NEGRA_M, CORCHEA_M, SEMICORCHEA_M,
+  SEMICORCHEA_M, SEMICORCHEA_M, SEMICORCHEA_M,
+  CORCHEA_M, CORCHEA_M,
+  NEGRA_M, CORCHEA_M, SEMICORCHEA_M,
+  SEMICORCHEA_M, SEMICORCHEA_M, SEMICORCHEA_M,
+  SEMICORCHEA_M, CORCHEA_M, NEGRA_M, CORCHEA_M,
+  SEMICORCHEA_M, NEGRA_M, CORCHEA_M, SEMICORCHEA_M,
+  BLANCA_M
 };
-
 
 /* USER CODE END PV */
 
@@ -328,9 +352,9 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //Inicializo el timer y el canal correspondiente
-  //playTone(notes2, durations2, NULL, (sizeof(notes2)/sizeof(notes2[0])));
+  //playTone(main_theme_notes, main_theme_durations, NULL, (sizeof(main_theme_notes)/sizeof(main_theme_notes[0])));
   //playTone(cantina_notes, cantina_durations, NULL, (sizeof(cantina_notes)/sizeof(cantina_notes[0])));
-  playTone(duel_notes, duel_durations, NULL, (sizeof(duel_notes)/sizeof(duel_notes[0])));
+  playTone(imperial_notes, imperial_durations, NULL, (sizeof(imperial_notes)/sizeof(imperial_notes[0])));
   noTone(); //pausa
   while (1)
   {
