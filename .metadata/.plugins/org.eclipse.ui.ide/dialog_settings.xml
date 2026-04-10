@@ -9,12 +9,17 @@
 		<item key="SmartImportRootWizardPage.STORE_NESTED_PROJECTS" value="true"/>
 		<item key="SmartImportRootWizardPage.STORE_CONFIGURE_NATURES" value="true"/>
 		<list key="org.eclipse.ui.internal.wizards.datatransfer.SmartImportRootWizardPage.knownSources">
+			<item value="C:\Users\bsmor\OneDrive\Documentos\GitHub\STM32progra\Laboratorio7\Laboratorio7"/>
+			<item value="C:\Users\bsmor\Desktop\Videojuego_material\STM libreria modificado\Modificado"/>
+			<item value="C:\Users\bsmor\Desktop\Videojuego_material\ILI9341SPI\ILI9341SPI"/>
+			<item value="C:\Users\bsmor\Desktop\Documentos de clase\7 semestre\Procesamiento de señales\Programación matlab\Laboratorio 10\IE3032, BE3022_Lab10_archivos\ADC_UART"/>
+			<item value="C:\Users\bsmor\Desktop\Documentos de clase\7 semestre\Procesamiento de señales\Programación matlab\Laboratorio 10\IE3032, BE3022_Lab10_archivos\ADC_TIMER_UART"/>
 			<item value="C:\Users\bsmor\OneDrive\Documentos\GitHub\Proyecto2-VideoJuego\Proyecto2Dig2"/>
 		</list>
 		<section name="STSmartImportWizard.dialogBounds">
-			<item key="DIALOG_X_ORIGIN" value="619"/>
+			<item key="DIALOG_X_ORIGIN" value="328"/>
 			<item key="DIALOG_Y_ORIGIN" value="278"/>
-			<item key="DIALOG_WIDTH" value="935"/>
+			<item key="DIALOG_WIDTH" value="1601"/>
 			<item key="DIALOG_HEIGHT" value="671"/>
 			<item key="DIALOG_FONT_NAME" value="1|Segoe UI|9.0|0|WINDOWS|1|-15|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI"/>
 		</section>

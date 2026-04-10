@@ -1,80 +1,129 @@
 #include <Bluepad32.h>
 
-ControllerPtr myControllers[BP32_MAX_GAMEPADS];
+// Solo un control
+ControllerPtr myController = nullptr;
 
-// Control de frecuencia de envío (IMPORTANTE)
+// UART2
+HardwareSerial MySerial(2);
+
+// Control de frecuencia
 uint32_t lastSend = 0;
-const int SEND_INTERVAL = 20; // ms → 50 Hz
+const int SEND_INTERVAL = 20;
+
+// Deadzone
+const int DEADZONE = 200;
+
+// Estado anterior
+int lastState[6] = {-1, -1, -1, -1, -1, -1};
+
+// ==============================
+// CALLBACKS
+// ==============================
 
 void onConnectedController(ControllerPtr ctl) {
-  Serial.printf("CALLBACK: Controller connected, idx=%d model=%s\n",
-                ctl->index(), ctl->getModelName().c_str());
-  for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-    if (myControllers[i] == nullptr) {
-      myControllers[i] = ctl;
-      break;
-    }
-  }
+  if (myController != nullptr) return;
+
+  Serial.println("Control conectado");
+  myController = ctl;
 }
 
 void onDisconnectedController(ControllerPtr ctl) {
-  Serial.println("CALLBACK: Controller disconnected");
-  for (int i = 0; i < BP32_MAX_GAMEPADS; i++) {
-    if (myControllers[i] == ctl) {
-      myControllers[i] = nullptr;
-      break;
-    }
+  if (myController == ctl) {
+    Serial.println("Control desconectado");
+    myController = nullptr;
   }
 }
 
+// ==============================
+// FUNCIONES
+// ==============================
+
+int applyDeadzone(int value) {
+  if (abs(value) < DEADZONE)
+    return 0;
+  return value;
+}
+
 void processGamepad(ControllerPtr ctl) {
-  // Limitar frecuencia de envío
-  if (millis() - lastSend < SEND_INTERVAL) return;
+  if (!ctl || !ctl->isConnected())
+    return;
+
+  if (millis() - lastSend < SEND_INTERVAL)
+    return;
+
   lastSend = millis();
 
   uint16_t buttons = ctl->buttons();
 
-  // Joysticks
-  int lx = ctl->axisX();
-  int ly = ctl->axisY();
-  int rx = ctl->axisRX();
-  int ry = ctl->axisRY();
+  int lx = applyDeadzone(ctl->axisX());
+  int ly = applyDeadzone(ctl->axisY());
 
-  // Botones (1 o 0)
-  int square = (buttons & 0x0004) ? 1 : 0;
-  int r1     = (buttons & 0x0020) ? 1 : 0;  // 
+  int current[6];
 
-  // Envío CSV puro por UART
-  Serial.printf("%d,%d,%d,%d,%d,%d\n", lx, ly, rx, ry, square, r1);
-}
+  current[0] = (ly < -DEADZONE) ? 1 : 0; // arriba
+  current[1] = (lx > DEADZONE)  ? 1 : 0; // derecha
+  current[2] = (ly > DEADZONE) ? 1 : 0; // abajo
+  current[3] = (lx < -DEADZONE)  ? 1 : 0; // izquierda
+  current[4] = (buttons & 0x0004) ? 1 : 0; // cuadrado
+  current[5] = (buttons & 0x0020) ? 1 : 0; // R1
 
-void processControllers() {
-  for (auto myController : myControllers) {
-    if (myController && myController->isConnected() && myController->hasData()) {
-      if (myController->isGamepad())
-        processGamepad(myController);
-      else
-        Serial.println("Unsupported controller");
+  bool changed = false;
+
+  for (int i = 0; i < 6; i++) {
+    if (current[i] != lastState[i]) {
+      changed = true;
+      break;
+    }
+  }
+
+  if (changed) {
+    // UART2 (al otro micro)
+    MySerial.printf("%d,%d,%d,%d,%d,%d\n",
+                    current[0], current[1], current[2],
+                    current[3], current[4], current[5]);
+
+    // Monitor serial (USB)
+    Serial.printf("%d,%d,%d,%d,%d,%d\n",
+                  current[0], current[1], current[2],
+                  current[3], current[4], current[5]);
+
+    for (int i = 0; i < 6; i++) {
+      lastState[i] = current[i];
     }
   }
 }
 
+// ==============================
+// SETUP
+// ==============================
+
 void setup() {
   Serial.begin(115200);
-  delay(200);
+
+  // UART2 → RX=16, TX=17
+  MySerial.begin(115200, SERIAL_8N1, 16, 17);
+
   Serial.println("START");
 
   BP32.setup(&onConnectedController, &onDisconnectedController);
   BP32.enableVirtualDevice(false);
-  BP32.forgetBluetoothKeys();
 
-  //Serial.println("Setup done.");
+  // Úsalo SOLO si quieres forzar emparejamiento:
+  BP32.forgetBluetoothKeys();
 }
+
+// ==============================
+// LOOP
+// ==============================
 
 void loop() {
   bool dataUpdated = BP32.update();
-  if (dataUpdated)
-    processControllers();
+
+  if (dataUpdated && myController && myController->hasData()) {
+    if (myController->isGamepad()) {
+      processGamepad(myController);
+    }
+  }
 
   vTaskDelay(1);
 }

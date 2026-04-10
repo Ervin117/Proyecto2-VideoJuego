@@ -476,18 +476,17 @@ int main(void)
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //Inicializo el timer y el canal correspondiente
   playTone(main_theme_notes, main_theme_durations, NULL, (sizeof(main_theme_notes)/sizeof(main_theme_notes[0])));
   playTone(cantina_notes, cantina_durations, NULL, (sizeof(cantina_notes)/sizeof(cantina_notes[0])));
-  playTone(imperial_notes, imperial_durations, NULL, (sizeof(imperial_notes)/sizeof(imperial_notes[0])));
-  playTone(falcon_notes, falcon_durations, NULL, (sizeof(falcon_notes)/sizeof(falcon_notes[0])));
+  //playTone(imperial_notes, imperial_durations, NULL, (sizeof(imperial_notes)/sizeof(imperial_notes[0])));
+  //playTone(falcon_notes, falcon_durations, NULL, (sizeof(falcon_notes)/sizeof(falcon_notes[0])));
   //playTone(asteroid_notes, asteroid_durations, NULL, (sizeof(asteroid_notes)/sizeof(asteroid_notes[0])));
   playTone(blaster_notes, blaster_durations, NULL, (sizeof(blaster_notes)/sizeof(blaster_notes[0])));
-  playTone(select_char_notes, select_char_durations, NULL, (sizeof(select_char_notes)/sizeof(select_char_notes[0])));
- playTone(ship_engine_notes, ship_engine_durations, NULL, (sizeof(ship_engine_notes)/sizeof(ship_engine_notes[0])));
-  playTone(explosion_notes, explosion_durations, NULL, (sizeof(explosion_notes)/sizeof(explosion_notes[0])));
+  //playTone(select_char_notes, select_char_durations, NULL, (sizeof(select_char_notes)/sizeof(select_char_notes[0])));
+  //playTone(ship_engine_notes, ship_engine_durations, NULL, (sizeof(ship_engine_notes)/sizeof(ship_engine_notes[0])));
+  //playTone(explosion_notes, explosion_durations, NULL, (sizeof(explosion_notes)/sizeof(explosion_notes[0])));
   noTone(); //pausa
   while (1)
   {
-
-
+	  //playTone(select_char_notes, select_char_durations, NULL, (sizeof(select_char_notes)/sizeof(select_char_notes[0])));
 
     /* USER CODE END WHILE */
 

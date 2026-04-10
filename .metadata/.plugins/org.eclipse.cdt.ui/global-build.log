@@ -1,49 +1,119 @@
-10:25:18 **** Incremental Build of configuration Debug for project Proyecto2STM ****
+12:47:16 **** Incremental Build of configuration Debug for project ILI9341SPI ****
 make -j16 all 
 arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F446xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
-arm-none-eabi-gcc -o "Proyecto2STM.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\bsmor\OneDrive\Documentos\GitHub\Proyecto2-VideoJuego\Proyecto2Dig2\Proyecto2STM\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Proyecto2STM.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Finished building target: Proyecto2STM.elf
+arm-none-eabi-gcc -o "ILI9341SPI.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\bsmor\Desktop\Videojuego_material\ILI9341SPI\ILI9341SPI\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ILI9341SPI.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: ILI9341SPI.elf
  
-arm-none-eabi-size  Proyecto2STM.elf 
-arm-none-eabi-objdump -h -S Proyecto2STM.elf  > "Proyecto2STM.list"
+arm-none-eabi-size  ILI9341SPI.elf 
+arm-none-eabi-objdump -h -S ILI9341SPI.elf  > "ILI9341SPI.list"
    text	   data	    bss	    dec	    hex	filename
-  12560	    708	   1716	  14984	   3a88	Proyecto2STM.elf
+ 328580	     16	   9928	 338524	  52a5c	ILI9341SPI.elf
 Finished building: default.size.stdout
  
-Finished building: Proyecto2STM.list
+Finished building: ILI9341SPI.list
  
-10:25:22 **** Incremental Build of configuration Debug for project Proyecto2STM ****
+12:47:19 **** Incremental Build of configuration Debug for project ILI9341SPI ****
 make -j16 all 
-arm-none-eabi-size  Proyecto2STM.elf 
+arm-none-eabi-size  ILI9341SPI.elf 
    text	   data	    bss	    dec	    hex	filename
-  12560	    708	   1716	  14984	   3a88	Proyecto2STM.elf
+ 328580	     16	   9928	 338524	  52a5c	ILI9341SPI.elf
 Finished building: default.size.stdout
  
-10:26:47 **** Incremental Build of configuration Debug for project Proyecto2STM ****
-make -j16 all 
-arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F446xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
-arm-none-eabi-gcc -o "Proyecto2STM.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\bsmor\OneDrive\Documentos\GitHub\Proyecto2-VideoJuego\Proyecto2Dig2\Proyecto2STM\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Proyecto2STM.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Finished building target: Proyecto2STM.elf
- 
-arm-none-eabi-size  Proyecto2STM.elf 
-arm-none-eabi-objdump -h -S Proyecto2STM.elf  > "Proyecto2STM.list"
-   text	   data	    bss	    dec	    hex	filename
-  12560	    708	   1716	  14984	   3a88	Proyecto2STM.elf
-Finished building: default.size.stdout
- 
-Finished building: Proyecto2STM.list
- 
-10:27:53 **** Incremental Build of configuration Debug for project Proyecto2STM ****
+12:49:34 **** Incremental Build of configuration Debug for project ILI9341SPI ****
 make -j16 all 
 arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F446xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
-arm-none-eabi-gcc -o "Proyecto2STM.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\bsmor\OneDrive\Documentos\GitHub\Proyecto2-VideoJuego\Proyecto2Dig2\Proyecto2STM\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Proyecto2STM.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
-Finished building target: Proyecto2STM.elf
+arm-none-eabi-gcc -o "ILI9341SPI.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\bsmor\Desktop\Videojuego_material\ILI9341SPI\ILI9341SPI\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ILI9341SPI.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: ILI9341SPI.elf
  
-arm-none-eabi-size  Proyecto2STM.elf 
-arm-none-eabi-objdump -h -S Proyecto2STM.elf  > "Proyecto2STM.list"
+arm-none-eabi-size  ILI9341SPI.elf 
+arm-none-eabi-objdump -h -S ILI9341SPI.elf  > "ILI9341SPI.list"
    text	   data	    bss	    dec	    hex	filename
-  12700	   2580	   1716	  16996	   4264	Proyecto2STM.elf
+ 328580	     16	   9928	 338524	  52a5c	ILI9341SPI.elf
 Finished building: default.size.stdout
  
-Finished building: Proyecto2STM.list
+Finished building: ILI9341SPI.list
+ 
+12:52:18 **** Incremental Build of configuration Debug for project ILI9341SPI ****
+make -j16 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F446xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "ILI9341SPI.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\bsmor\Desktop\Videojuego_material\ILI9341SPI\ILI9341SPI\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ILI9341SPI.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: ILI9341SPI.elf
+ 
+arm-none-eabi-size  ILI9341SPI.elf 
+arm-none-eabi-objdump -h -S ILI9341SPI.elf  > "ILI9341SPI.list"
+   text	   data	    bss	    dec	    hex	filename
+ 328588	     16	   9928	 338532	  52a64	ILI9341SPI.elf
+Finished building: default.size.stdout
+ 
+Finished building: ILI9341SPI.list
+ 
+12:53:36 **** Incremental Build of configuration Debug for project ILI9341SPI ****
+make -j16 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F446xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "ILI9341SPI.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\bsmor\Desktop\Videojuego_material\ILI9341SPI\ILI9341SPI\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ILI9341SPI.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: ILI9341SPI.elf
+ 
+arm-none-eabi-size  ILI9341SPI.elf 
+arm-none-eabi-objdump -h -S ILI9341SPI.elf  > "ILI9341SPI.list"
+   text	   data	    bss	    dec	    hex	filename
+ 328588	     16	   9928	 338532	  52a64	ILI9341SPI.elf
+Finished building: default.size.stdout
+ 
+Finished building: ILI9341SPI.list
+ 
+12:56:11 **** Incremental Build of configuration Debug for project ILI9341SPI ****
+make -j16 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F446xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "ILI9341SPI.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\bsmor\Desktop\Videojuego_material\ILI9341SPI\ILI9341SPI\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ILI9341SPI.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: ILI9341SPI.elf
+ 
+arm-none-eabi-size  ILI9341SPI.elf 
+arm-none-eabi-objdump -h -S ILI9341SPI.elf  > "ILI9341SPI.list"
+   text	   data	    bss	    dec	    hex	filename
+ 328600	     16	   9928	 338544	  52a70	ILI9341SPI.elf
+Finished building: default.size.stdout
+ 
+Finished building: ILI9341SPI.list
+ 
+12:57:41 **** Incremental Build of configuration Debug for project ILI9341SPI ****
+make -j16 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F446xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "ILI9341SPI.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\bsmor\Desktop\Videojuego_material\ILI9341SPI\ILI9341SPI\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ILI9341SPI.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: ILI9341SPI.elf
+ 
+arm-none-eabi-size  ILI9341SPI.elf 
+arm-none-eabi-objdump -h -S ILI9341SPI.elf  > "ILI9341SPI.list"
+   text	   data	    bss	    dec	    hex	filename
+ 328600	     16	   9928	 338544	  52a70	ILI9341SPI.elf
+Finished building: default.size.stdout
+ 
+Finished building: ILI9341SPI.list
+ 
+12:59:24 **** Incremental Build of configuration Debug for project ILI9341SPI ****
+make -j16 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F446xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "ILI9341SPI.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\bsmor\Desktop\Videojuego_material\ILI9341SPI\ILI9341SPI\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ILI9341SPI.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: ILI9341SPI.elf
+ 
+arm-none-eabi-size  ILI9341SPI.elf 
+arm-none-eabi-objdump -h -S ILI9341SPI.elf  > "ILI9341SPI.list"
+   text	   data	    bss	    dec	    hex	filename
+ 328600	     16	   9928	 338544	  52a70	ILI9341SPI.elf
+Finished building: default.size.stdout
+ 
+Finished building: ILI9341SPI.list
+ 
+13:00:04 **** Incremental Build of configuration Debug for project ILI9341SPI ****
+make -j16 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m4 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F446xx -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-gcc -o "ILI9341SPI.elf" @"objects.list"   -mcpu=cortex-m4 -T"C:\Users\bsmor\Desktop\Videojuego_material\ILI9341SPI\ILI9341SPI\STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ILI9341SPI.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: ILI9341SPI.elf
+ 
+arm-none-eabi-size  ILI9341SPI.elf 
+arm-none-eabi-objdump -h -S ILI9341SPI.elf  > "ILI9341SPI.list"
+   text	   data	    bss	    dec	    hex	filename
+ 328600	     16	   9928	 338544	  52a70	ILI9341SPI.elf
+Finished building: default.size.stdout
+ 
+Finished building: ILI9341SPI.list
  
