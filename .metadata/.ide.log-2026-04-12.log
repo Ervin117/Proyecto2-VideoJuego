@@ -1,0 +1,7 @@
+2026-04-12 17:00:16,077 [INFO] Activator:176 - 
+
+
+2026-04-12 17:00:16,082 [INFO] Activator:177 - !SESSION log4j initialized
+2026-04-12 17:00:20,789 [INFO] LogOutputStream:77 - [STDOUT_REDIRECT] 
+2026-04-12 17:35:29,734 [ERROR] LogOutputStream:75 - [STDERR_REDIRECT] [Fatal Error] :47:41: Las estructuras del documento XML deben empezar y finalizar en la misma entidad.
+2026-04-12 17:35:29,742 [ERROR] LogOutputStream:75 - [STDERR_REDIRECT] 

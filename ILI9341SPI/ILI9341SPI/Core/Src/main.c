@@ -1,4 +1,8 @@
 /* USER CODE BEGIN Header */
+/*
+ * Este código es la pantalla del videojuego proyecto 2 de electronica digital 2
+ * Para este código se implementaron varios conceptos aprendidos en clase
+ */
 /**
  ******************************************************************************
  * @file           : main.c
@@ -23,10 +27,42 @@
 /* USER CODE BEGIN Includes */
 #include "ili9341.h"
 #include "bitmaps.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+
+// Implementación de estructura para las variables de interrupción provenientes del controls de PS4
+// Intento probarlas ya que facilita el código
+typedef struct {
+    int arriba;
+    int derecha;
+    int abajo;
+    int izquierda;
+    int cuadrado;
+    int r1;
+} PlayStationBuffer;
+
+// Estructura para colocar los datos necesarios para mover las naves de los jugadores
+typedef struct {
+    int posX, posY, oldX, oldY;
+    int ancho, alto;
+    int frame_actual;
+    int old_frame;             //Para saber si resetear el sprite
+    const uint16_t *sprite;
+    uint16_t *buffer;
+    int blaster_activo;
+    float blasterX, blasterY;
+    int oldBX, oldBY;
+    float dist_blaster;
+    int frame_blaster;
+    uint16_t *b_buffer;
+} Jugador;
+
+
 
 /* USER CODE END PTD */
 
@@ -42,26 +78,104 @@
 
 /* Private variables ---------------------------------------------------------*/
 SPI_HandleTypeDef hspi1;
+DMA_HandleTypeDef hdma_spi1_tx;
 
+TIM_HandleTypeDef htim2;
+
+UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-//---- para UART -----
-uint8_t rxData = 0;
-uint8_t comando = 0;
-uint8_t nuevo_comando = 1;
 
-extern const uint16_t halcon[];
+//--- Variables para selección de personajes ---------
+int cinematica = 0;								// Variable para llevar el registro de que parte del videojuego va
+int colocar_fondo = 1;
+//----------------------------------------------------
+
+// ------ Variables para cinematica ------------------
+uint16_t sprite_buffer[64 * 64]; 				// Las librerias utilizan este buffer
+// ---------------------------------------------------
+
+//-------- Variables exclusivas del blaster jugadores ---------
+int anchoB = 7, altoB = 14;						//Dimensiones del blaster
+//-------------------------------------------------------------
+
+// ================= variables para JUGADORES==========================
+//=====================================================================
+// Variables generales para ambos jugadores
+Jugador j[2]; 									// Definimos la estructura
+uint16_t colorTrans = 0xffe0; 					// Definimos el color transparente
+int velocidad = 5;								// Para controlar la velocidad del movimiento
+//-------------- Variables exclusivas del X-wing J1 ---------
+// para la seleccion de personaje
+int character = 0;
+int char_final = 0;
+int personaje_seleccionado_J1 = 0;
+// para jugabilidad y borrado de rastro cuando se mueve
+uint16_t sprite_buffer_J1[64 * 64];				// Buffer para poder borrar el fondo del sprite, debe ser mas grande que una columna del sprite
+uint16_t b_buffer_J1[28*14];
+//-------------------------------------------------
+
+//----------- Variables exclusivas del halcon milenario J2 ---------
+// Para seleccion personaje
+ uint8_t char_final_J2 = 0;
+uint8_t character_J2 = 0;
+uint8_t personaje_seleccionado_J2 = 0;
+//---------------------------
+uint16_t sprite_buffer_J2[64 * 64];				// Buffer para poder borrar el fondo del sprite, debe ser mas grande del una columna del sprite
+uint16_t b_buffer_J2[28*14];
+//===================================================================
+
+// ================= variables para ENEMIGOS==========================
+//=====================================================================
+volatile uint32_t tiempo_spawn = 0; // Contador de tiempo real
+uint32_t limite_spawn = 2000;       // Cada 2 segundos (2000 ms)
+
+uint16_t buffer_mezcla[35 * 35];				// Buffer para nave enemiga
+NaveEnemiga enemigos[3];						// Definicion de la estructura (libreria)
+//-----------------------------------------------------
+// Bandera para saber si el DMA terminó de enviar
+volatile uint8_t dma_libre = 1;
+
+// MELMAN: esto lo tengo por los fondos que tenia en la ram pero ya no los tengo los comente y solo aparece uno
+// Variables necesarias para desplegar los fondos guardados en la RAM
+//extern const uint16_t halcon[];
 extern const uint16_t xwing[];
-uint16_t sprite_buffer[64 * 64];
+extern const uint16_t stars[];
+extern const uint16_t choose[];
+
+//------ para UART 1---------- jugador J1
+PlayStationBuffer control;
+uint8_t rx_data;              // Byte recibido actualmente
+char rx_buffer[50];           // Buffer para guardar la cadena "0,0,0,0,0,0"
+int rx_index = 0;             // Índice del buffer
+int values[6];                // Array para guardar los valores recibidos
+uint8_t data_ready = 0;       // Bandera
+
+//------ para UART 3---------- jugador J1
+PlayStationBuffer control_J2;
+uint8_t rx_data_J2;              // Byte recibido actualmente
+char rx_buffer_J2[50];           // Buffer para guardar la cadena "0,0,0,0,0,0"
+int rx_index_J2 = 0;             // Índice del buffer
+int values_J2[6];                // Array para guardar los valores recibidos
+uint8_t data_ready_J2 = 0;       // Bandera
+
+
+//---- para UART en general -----
+uint8_t rxData = 0;
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_USART1_UART_Init(void);
+static void MX_USART3_UART_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -100,8 +214,12 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_SPI1_Init();
+  MX_USART1_UART_Init();
+  MX_USART3_UART_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 	LCD_Init();
 	LCD_Clear(0x00);
@@ -115,90 +233,267 @@ int main(void)
 		x += 15;
 	}
 	*/
+	 HAL_TIM_Base_Start_IT(&htim2); // Inicia el Timer 2 con Interrupciones
 
 	 HAL_UART_Receive_IT(&huart2, &rxData, 1); // Disparar interrupción cuando reciba un byte
-	 HAL_UART_Transmit(&huart2,(uint8_t*)"Menu:\r\n",7,1000);
-	 HAL_UART_Transmit(&huart2,(uint8_t*)"Seleccione una opcion:\r\n",24,1000);
-	 HAL_UART_Transmit(&huart2,(uint8_t*)"1. Cancion 1\r\n",14,1000);
-	 HAL_UART_Transmit(&huart2,(uint8_t*)"2. Cancion 2\r\n",14,1000);
+	 HAL_UART_Receive_IT(&huart1, &rx_data, 1); // Disparar interrupción cuando reciba un byte
+	 HAL_UART_Receive_IT(&huart3, &rxData, 1); // Disparar interrupción cuando reciba un byte
+
+	 // ==============================================================================
+	 //========== Inicializar los personajes de sprites para J1 y J2==================
+	 // ==============================================================================
+	 // --- Jugador 1 (X-Wing) ---
+	 j[0].ancho = 50;  j[0].alto = 42;			// Tamaño del sprite
+	 j[0].posX = 80;   j[0].posY = 180;			// Posicion inicial
+	 j[0].sprite = xwing_realista;  			// Sprite fijo J1
+	 j[0].buffer = sprite_buffer_J1;
+	 j[0].b_buffer = b_buffer_J1;
+
+	 // --- Jugador 2 (Halcón) ---
+	 j[1].ancho = 60;  j[1].alto = 38;			// Tamaño del sprite
+	 j[1].posX = 240;  j[1].posY = 180;			// Posicion inicial
+	 j[1].sprite = halcon_sprite;   			// Sprite fijo J2
+	 j[1].buffer = sprite_buffer_J2;
+	 j[1].b_buffer = b_buffer_J2;
+
+	 // ==============================================================================
+	 //========== Inicializar los enemigos uno por uno ===============================
+	 // ==============================================================================
+	 // Enemigo 1
+	 enemigos[0].x = 40;						// Posición en x inicial de la nave
+	 enemigos[0].y = 30;						// Posición en y inicial de la nave
+	 enemigos[0].direccion = 1;					// Cada nave puede ir a derecha o izquierda inicialmente
+	 enemigos[0].limite_izq = 10;				// Limite de la nave lado izquierdo
+	 enemigos[0].limite_der = 100;				// Limite de la nave lado derecho
+
+	 // Enemigo 2
+	 enemigos[1].x = 200;
+	 enemigos[1].y = 50;
+	 enemigos[1].direccion = -1;
+	 enemigos[1].limite_izq = 150;
+	 enemigos[1].limite_der = 300;
+
+	 // Enemigo 2
+	 enemigos[2].x = 100;
+	 enemigos[2].y = 10;
+	 enemigos[2].direccion = 1;
+	 enemigos[2].limite_izq = 100;
+	 enemigos[2].limite_der = 200;
+
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+	 LCD_Bitmap(0, 0, 320, 240, stars); // Aqui debe de aparecer el fondo choose
+	 HAL_UART_Transmit(&huart2, (uint8_t*)"1", 1, 1000); // Para reproducir (cantina)
 	while (1) {
-		if(comando == '1' || comando == '2' || comando == '3'){
-
-		    // 1. DDeclaración de variables vacias
-		    int posX, posY, anchoC, altoC, posY_stop;
-		    const uint16_t *fondo_seleccionado; // Puntero para el fondo
-		    const uint16_t *personaje; // Puntero para el fondo
-		    uint16_t colorTrans = 0xffe0;
-
-		    // 2. ASIGNACIÓN (Definimos los valores según la opción)
-		    if (comando == '1'){
-		        LCD_Bitmap(0, 0, 320, 240, halcon);
-		        fondo_seleccionado = halcon;
-		        personaje = chewbacca;
-		        posX = 252;
-		        posY = 200;
-		        anchoC = 16;
-		        altoC = 36;
-		        posY_stop = 100;
-		    }
-		    else if (comando == '2'){
-		        LCD_Bitmap(0, 0, 320, 240, xwing);
-		        fondo_seleccionado = xwing;
-		        personaje = luke;
-		        posX = 180;
-		        posY = 200;
-		        anchoC = 14;
-		        altoC = 30;
-		        posY_stop = 115;
-		    }
-		    else if (comando == '3'){
-		    	LCD_Bitmap(0, 0, 320, 240, halcon);
-		    	fondo_seleccionado = halcon;
-		    	personaje = han_solo;
-		    	posX = 252;
-		    	posY = 200;
-		    	anchoC = 14;
-		    	altoC = 32;
-		    	posY_stop = 100;
-		    }
-
-		    comando = 0; // Limpiamos comando
-
-		    // 3. CICLO ÚNICO (Ahora es universal)
-		    for (int y = posY; y >= posY_stop; y--) {
-		        int anim = (y / 10) % 2;
-
-		        // Usamos 'fondo_seleccionado' en lugar de un nombre fijo
-		        LCD_DibujarSpriteBuffer(posX, y, anchoC, altoC, personaje, anim, fondo_seleccionado, 320, colorTrans);
-
-		        if (y < 200) {
-		            uint32_t offset_rastro = (uint32_t)(y + altoC) * 320 + posX;
-		            // Limpiamos con el fondo correcto
-		            LCD_Bitmap(posX, y + altoC, anchoC, 1, (uint16_t*)&fondo_seleccionado[offset_rastro]);
-		        }
-
-		        HAL_Delay(25);
-		    }
-
-		    // --- ELIMINACIÓN FINAL ---
-		    for (int j = 0; j < altoC; j++) {
-		        for (int i = 0; i < anchoC; i++) {
-		            uint32_t idx = (uint32_t)(posY_stop + j) * 320 + (posX + i);
-		            sprite_buffer[j * anchoC + i] = fondo_seleccionado[idx];
-		        }
-		    }
-		    LCD_Bitmap(posX, posY_stop, anchoC, altoC, sprite_buffer);
-
-		    // Mostrar menú después
-		    HAL_UART_Transmit(&huart2,(uint8_t*)"\r\nMenu:\r\n1. Cancion 1\r\n2. Cancion 2\r\n",38,1000);
+		// ==================================================================================================
+		// ==================================SELECCIÓN PERSONAJES===========================================
+		// ==================================================================================================
+		if (cinematica == 0){
+		// Lógica seleccion de personaje jugador 1
+		if(personaje_seleccionado_J1 == 0){
+			if(control.izquierda){
+				//Borrar cuadrado anterior
+				Rect(84, 51, 74, 174, 0x0000); Rect(84, 52, 74, 174, 0x0000);
+				Rect(84, 53, 74, 174, 0x0000); Rect(85, 51, 74, 174, 0x0000); Rect(86, 51, 74, 174, 0x0000);
+				//Cuadrado de selección
+				Rect(5, 51, 74, 174, 0xf9c0); Rect(5, 52, 74, 174, 0xf9c0);
+				Rect(5, 53, 74, 174, 0xf9c0); Rect(6, 51, 74, 174, 0xf9c0); Rect(7, 51, 74, 174, 0xf9c0);
+				character = 4;
+			}
+			else if (control.derecha){
+				//Borrar cuadrado anterior
+				Rect(5, 51, 74, 174, 0x0000); Rect(5, 52, 74, 174, 0x0000);
+				Rect(5, 53, 74, 174, 0x0000); Rect(6, 51, 74, 174, 0x0000); Rect(7, 51, 74, 174, 0x0000);
+				//cuadrado de selección
+				Rect(84, 51, 74, 174, 0xf9c0); Rect(84, 52, 74, 174, 0xf9c0);
+				Rect(84, 53, 74, 174, 0xf9c0); Rect(85, 51, 74, 174, 0xf9c0); Rect(86, 51, 74, 174, 0xf9c0);
+				character = 2;
+			}else if (control.cuadrado){
+				char_final = character;
+				personaje_seleccionado_J1 = 1;
+			}
+		}
+		// Lógica seleccion de personaje jugador 2
+		if (personaje_seleccionado_J2 == 0){
+			if(control_J2.derecha){
+				//Borrar cuadrado anterior
+				Rect(162, 51, 74, 174, 0x0000); Rect(162, 52, 74, 174, 0x0000);
+				Rect(162, 53, 74, 174, 0x0000); Rect(163, 51, 74, 174, 0x0000); Rect(164, 51, 74, 174, 0x0000);
+				//Cuadrado de selección
+				Rect(238, 51, 74, 174, 0x0210); Rect(238, 52, 74, 174, 0x0210);
+				Rect(238, 53, 74, 174, 0x0210); Rect(239, 51, 74, 174, 0x0210); Rect(240, 51, 74, 174, 0x0210);
+				character_J2 = 3;
+			}
+			else if (control_J2.izquierda){
+				//Borrar cuadrado anterior
+				Rect(238, 51, 74, 174, 0x0000); Rect(238, 52, 74, 174, 0x0000);
+				Rect(238, 53, 74, 174, 0x0000); Rect(239, 51, 74, 174, 0x0000); Rect(240, 51, 74, 174, 0x0000);
+				//cuadrado de selección
+				Rect(162, 51, 74, 174, 0x0210); Rect(162, 52, 74, 174, 0x0210);
+				Rect(162, 53, 74, 174, 0x0210); Rect(163, 51, 74, 174, 0x0210); Rect(164, 51, 74, 174, 0x0210);
+				character_J2 = 1;
+			}else if (control_J2.cuadrado){
+				char_final_J2 = character_J2;
+				personaje_seleccionado_J2 = 1;
+			}
 		}
 
+
+		if (personaje_seleccionado_J1 && personaje_seleccionado_J2){
+			cinematica = 1;
+		}
+		}else if (cinematica == 1){
+			 // ==================================================================================================
+			 // ==================================CINEMÁTICA PERSONAJES===========================================
+			 // ==================================================================================================
+			HAL_UART_Transmit(&huart2, (uint8_t*)"1", 1, 1000); // Para reproducir (star wars main theme)
+		    DatosPersonaje p;
+
+		    // Asignación de valores
+		    if (char_final == 2) { p.sprite = luke; p.fondo = stars;  p.posX = 180; p.ancho = 14; p.alto = 30; p.yStop = 115; } // Cambiar p.fondo = xwing o halcon
+		    else if (char_final == 4) { p.sprite = piloto; p.fondo = stars;  p.posX = 180; p.ancho = 14; p.alto = 30; p.yStop = 115; }
+
+		    // Ejecución
+		    LCD_Bitmap(0, 0, 320, 240, p.fondo); // Dibujar el fondo una vez
+		    EjecutarAnimacion(p);                // Llamar a la lógica modular
+
+		    cinematica = 2;
+	}
+	else if (cinematica == 2){
+			    DatosPersonaje p;
+
+			    // Asignación de valores
+			    if (char_final_J2 == 1)      { p.sprite = chewbacca; p.fondo = stars; p.posX = 252; p.ancho = 16; p.alto = 36; p.yStop = 100; }
+			    else if (char_final_J2 == 3) { p.sprite = han_solo;  p.fondo = stars; p.posX = 252; p.ancho = 14; p.alto = 32; p.yStop = 100; }
+
+			    // Ejecución
+			    //LCD_Bitmap(0, 0, 320, 240, p.fondo); // Dibujar el fondo una vez
+			    EjecutarAnimacion(p);                // Llamar a la lógica modular
+
+			    cinematica = 3;
+		}
+		// ==================================================================================================
+		// ==================================== JUEGO PRINCIPAL =============================================
+		// ==================================================================================================
+	else if (cinematica == 3) {
+	    if (colocar_fondo) {
+	        LCD_Bitmap(0, 0, 320, 240, stars);			// Necesario para que solo aparezca una vez el fondo
+	        colocar_fondo = 0;
+	    }
+	    // --------- FASE 1: ASIGNACIÓN E INICIALIZACIÓN DE DATOS Y MOVIMEINTO  ----------------------------
+	        for (int i = 0; i < 2; i++) {
+	            j[i].oldX = j[i].posX;
+	            j[i].oldY = j[i].posY;
+	            j[i].oldBX = (int)j[i].blasterX;
+	            j[i].oldBY = (int)j[i].blasterY;
+
+	            PlayStationBuffer *ctrl = (i == 0) ? &control : &control_J2;
+
+	            j[i].frame_actual = 0;
+	            if (ctrl->derecha)      { j[i].posX += velocidad; j[i].frame_actual = 2; }
+	            else if (ctrl->izquierda) { j[i].posX -= velocidad; j[i].frame_actual = 1; }
+	            if (ctrl->arriba) j[i].posY -= velocidad;
+	            if (ctrl->abajo)  j[i].posY += velocidad;
+
+	            // Límites de pantalla para naves
+	            if (j[i].posX < 0) j[i].posX = 0;
+	            if (j[i].posX > (320 - j[i].ancho)) j[i].posX = 320 - j[i].ancho;
+	            if (j[i].posY < 0) j[i].posY = 0;
+	            if (j[i].posY > (240 - j[i].alto)) j[i].posY = 240 - j[i].alto;
+
+	            // Lógica de disparo
+	            if (ctrl->cuadrado && !j[i].blaster_activo) {
+	                j[i].blaster_activo = 1;
+	                j[i].blasterX = j[i].posX + (j[i].ancho / 2) - 3;
+	                j[i].blasterY = j[i].posY - 10;
+	                j[i].dist_blaster = 0;
+	            }
+
+	            if (j[i].blaster_activo) {
+	                j[i].blasterY -= 7;
+	                j[i].dist_blaster += 7;
+	                int fb = (int)(j[i].dist_blaster / 20);
+	                j[i].frame_blaster = (fb < 4) ? fb : 3;
+
+	                if (j[i].blasterY < 6 || j[i].dist_blaster > 70) { // el 70 es la distancia que va a recorrer el blaster del jugador dist_blaster
+	                    // Borrado de despedida del blaster
+	                    while(!dma_libre);
+	                    for (int r = 0; r < altoB; r++) {
+	                        for (int c = 0; c < anchoB; c++) {
+	                            int cy = (j[i].oldBY + r < 0) ? 0 : (j[i].oldBY + r >= 240 ? 239 : j[i].oldBY + r);
+	                            uint32_t idx = (uint32_t)cy * 320 + (j[i].oldBX + c);
+	                            j[i].b_buffer[r * anchoB + c] = (stars[idx] << 8) | (stars[idx] >> 8);
+	                        }
+	                    }
+	                    LCD_Bitmap_DMA(j[i].oldBX, j[i].oldBY, anchoB, altoB, j[i].b_buffer);
+	                    j[i].blaster_activo = 0;
+	                    j[i].dist_blaster = 0;
+	                }
+	            }
+	        }
+
+	        // ------------------------ FASE 2: BORRADO DE RASTROS ------------------------------------
+	        for (int i = 0; i < 2; i++) {
+	            // Borrar nave
+	            if (j[i].oldX != j[i].posX || j[i].oldY != j[i].posY) {
+	                while(!dma_libre);
+	                for (int r = 0; r < j[i].alto; r++) {
+	                    for (int c = 0; c < j[i].ancho; c++) {
+	                        uint32_t idx = (uint32_t)(j[i].oldY + r) * 320 + (j[i].oldX + c);
+	                        j[i].buffer[r * j[i].ancho + c] = (stars[idx] << 8) | (stars[idx] >> 8);
+	                    }
+	                }
+	                LCD_Bitmap_DMA(j[i].oldX, j[i].oldY, j[i].ancho, j[i].alto, j[i].buffer);
+	            }
+	            // Borrar rastro blaster (Mientras viaja)
+	            if (j[i].blaster_activo) {
+	                while(!dma_libre);
+	                for (int r = 0; r < altoB; r++) {
+	                    for (int c = 0; c < anchoB; c++) {
+	                        int cy = j[i].oldBY + r;
+	                        if (cy >= 0 && cy < 240) {
+	                            uint32_t idx = (uint32_t)cy * 320 + (j[i].oldBX + c);
+	                            j[i].b_buffer[r * anchoB + c] = (stars[idx] << 8) | (stars[idx] >> 8);
+	                        }
+	                    }
+	                }
+	                LCD_Bitmap_DMA(j[i].oldBX, j[i].oldBY, anchoB, altoB, j[i].b_buffer);
+	            }
+	        }
+
+	        // ------------------------ FASE 3: DIBUJADO POR CAPAS ---------------------------------------
+
+	        // Aqui se dibujan los enemigos y los blaster de los enemigos
+	        for (int i = 0; i < 3; i++) {
+	            int desfase = i * 300; // 300ms después que la anterior.
+	            ProcesarEnemigo(&enemigos[i], i, enemigo, blaster_verde, stars, colorTrans, desfase);
+	        }
+	        //-------------------------------------------------
+
+	        // Capa 2: Jugadores y Blasters (Encima de los enemigos)
+	        for (int i = 0; i < 2; i++) {
+	            while(!dma_libre);
+	            LCD_DibujarSpriteUniversal(j[i].posX, j[i].posY, j[i].ancho, j[i].alto,
+	                                       j[i].sprite, j[i].frame_actual, (j[i].ancho * 3),
+	                                       stars, 320, colorTrans, j[i].buffer);
+
+	            if (j[i].blaster_activo) {
+	                while(!dma_libre);
+	                LCD_DibujarSpriteUniversal((int)j[i].blasterX, (int)j[i].blasterY,
+	                                           anchoB, altoB, blaster, j[i].frame_blaster,
+	                                           28, stars, 320, colorTrans, j[i].b_buffer);
+	            }
+	        }
+
+	        HAL_Delay(25);
+	    }
+/*
+
+*/
 
     /* USER CODE END WHILE */
 
@@ -293,6 +588,84 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 8399;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 99;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 9600;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -322,6 +695,55 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART3_Init 0 */
+
+  /* USER CODE END USART3_Init 0 */
+
+  /* USER CODE BEGIN USART3_Init 1 */
+
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 9600;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
+
+  /* USER CODE END USART3_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Stream3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream3_IRQn);
 
 }
 
@@ -383,16 +805,57 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-    if (huart->Instance == USART2)
-    {
-        comando = rxData;
-        nuevo_comando = 1;
-
-        HAL_UART_Receive_IT(&huart2, &rxData, 1); //Vuelvo a iniciar el comando para interrupcion
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
+    if (hspi->Instance == SPI1) {
+        dma_libre = 1;
     }
 }
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    // --- JUGADOR 1 (USART1) ---
+    if (huart->Instance == USART1) {
+        if (rx_data == '\n' || rx_data == '\r') {
+            rx_buffer[rx_index] = '\0';
+            if (sscanf(rx_buffer, "%d,%d,%d,%d,%d,%d", // Intentamos leer 6 enteros. sscanf devuelve cuántos leyó con éxito.
+                       &control.arriba, &control.derecha, &control.abajo,
+                       &control.izquierda, &control.cuadrado, &control.r1) == 6) {
+                data_ready = 1;
+            }
+            rx_index = 0;
+        } else {
+            if (rx_index < 49) {
+                rx_buffer[rx_index++] = rx_data;
+            }
+        }
+        HAL_UART_Receive_IT(&huart1, &rx_data, 1);
+    }
+
+    // --- JUGADOR 2 (USART3) ---
+    else if (huart->Instance == USART3) {
+        if (rx_data_J2 == '\n' || rx_data_J2 == '\r') { // Usar variable J2
+            rx_buffer_J2[rx_index_J2] = '\0';
+            if (sscanf(rx_buffer_J2, "%d,%d,%d,%d,%d,%d",
+                       &control_J2.arriba, &control_J2.derecha, &control_J2.abajo,
+                       &control_J2.izquierda, &control_J2.cuadrado, &control_J2.r1) == 6) {
+                data_ready_J2 = 1;
+            }
+            rx_index_J2 = 0;
+        } else {
+            if (rx_index_J2 < 49) {
+                rx_buffer_J2[rx_index_J2++] = rx_data_J2;
+            }
+        }
+        HAL_UART_Receive_IT(&huart3, &rx_data_J2, 1);
+    }
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    if (htim->Instance == TIM2) {
+        tiempo_spawn += 10; // Sumamos 10ms cada vez que entra aquí
+    }
+}
+
 /* USER CODE END 4 */
 
 /**

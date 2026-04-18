@@ -9,6 +9,9 @@
 		<item key="SmartImportRootWizardPage.STORE_NESTED_PROJECTS" value="true"/>
 		<item key="SmartImportRootWizardPage.STORE_CONFIGURE_NATURES" value="true"/>
 		<list key="org.eclipse.ui.internal.wizards.datatransfer.SmartImportRootWizardPage.knownSources">
+			<item value="C:\Users\bsmor\OneDrive\Documentos\GitHub\STM32progra\Laboratorio6\Laboratorio6STM"/>
+			<item value="C:\Users\bsmor\OneDrive\Documentos\GitHub\Proyecto2-VideoJuego\ILI9341SPI\ILI9341SPI"/>
+			<item value="C:\Users\bsmor\OneDrive\Documentos\GitHub\Proyecto2-VideoJuego\ILI9341SPI"/>
 			<item value="C:\Users\bsmor\OneDrive\Documentos\GitHub\STM32progra\Laboratorio7\Laboratorio7"/>
 			<item value="C:\Users\bsmor\Desktop\Videojuego_material\STM libreria modificado\Modificado"/>
 			<item value="C:\Users\bsmor\Desktop\Videojuego_material\ILI9341SPI\ILI9341SPI"/>

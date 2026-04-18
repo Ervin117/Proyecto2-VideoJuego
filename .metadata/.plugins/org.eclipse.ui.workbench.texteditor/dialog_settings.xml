@@ -3,11 +3,20 @@
 	<item key="hasShownOverlayPopupBefore" value="true"/>
 	<item key="replaceBarOpen" value="false"/>
 	<list key="searchhistory">
-		<item value="altoC"/>
-		<item value="posY_stop"/>
-		<item value="posX"/>
-		<item value="colorTrans"/>
-		<item value="180"/>
-		<item value="sonic"/>
+		<item value="dist_recorrida_bala"/>
+		<item value="EnemigoSimple"/>
+		<item value="LCD_DibujarSpriteBuffer"/>
+		<item value="LCD_Sprite"/>
+		<item value="LCD_Bitmap_DMA"/>
+		<item value="comando"/>
+		<item value="nuevo_comando"/>
+		<item value="data_ready"/>
+		<item value="NaveEnemiga"/>
+		<item value="buffer_mezcla"/>
+		<item value="MAX_ENEMIGOS"/>
+		<item value="buffer_blaster"/>
+		<item value="frame_blaster"/>
+		<item value="blaster_activo"/>
+		<item value="anchoB"/>
 	</list>
 </section>

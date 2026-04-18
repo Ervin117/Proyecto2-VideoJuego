@@ -8,7 +8,11 @@
 ../Core/Src/ili9341.c:253:6:Rect	1
 ../Core/Src/ili9341.c:263:6:FillRect	3
 ../Core/Src/ili9341.c:288:6:LCD_Print	11
-../Core/Src/ili9341.c:353:6:LCD_Bitmap	2
-../Core/Src/ili9341.c:376:6:LCD_BitmapTransparent	4
-../Core/Src/ili9341.c:399:6:LCD_Sprite	6
-../Core/Src/ili9341.c:443:6:LCD_DibujarSpriteBuffer	4
+../Core/Src/ili9341.c:354:6:LCD_Bitmap	2
+../Core/Src/ili9341.c:377:6:LCD_BitmapTransparent	4
+../Core/Src/ili9341.c:400:6:LCD_Sprite	6
+../Core/Src/ili9341.c:447:6:LCD_DibujarSpriteBuffer	4
+../Core/Src/ili9341.c:475:6:LCD_Bitmap_DMA	3
+../Core/Src/ili9341.c:507:6:LCD_DibujarSpriteUniversal	5
+../Core/Src/ili9341.c:532:6:EjecutarAnimacion	5
+../Core/Src/ili9341.c:559:6:ProcesarEnemigo	24

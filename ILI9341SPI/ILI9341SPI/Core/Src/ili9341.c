@@ -350,6 +350,7 @@ void LCD_Print(char *text, int x, int y, int fontSize, int color,
 //***************************************************************************************************************************************
 // Función para dibujar una imagen a partir de un arreglo de colores (Bitmap) Formato (Color 16bit R 5bits G 6bits B 5bits)
 //***************************************************************************************************************************************
+
 void LCD_Bitmap(unsigned int x, unsigned int y, unsigned int width,
 		unsigned int height, const uint16_t *bitmap) {
 	//LCD_CMD(0x02c); // write_memory_start
@@ -439,19 +440,22 @@ void LCD_Sprite(int x, int y, int width, int height, const uint16_t *bitmap,
 
 //***************************************************************************************************************************************
 // Función para dibujar un sprite con transparencia (Renderizado por Regiones)
+// Recopilado de: https://www.youtube.com/watch?v=U4jOFLFNZBI&t=7s
+// Github: https://github.com/VolosR/SpritesTuT
 //***************************************************************************************************************************************
+// Esta función es única para la cinematica por que asume que solo se usan dos frames
 void LCD_DibujarSpriteBuffer(int x, int y, int w, int h, const uint16_t *sprite_map, int frame, const uint16_t *fondo_global, int ancho_fondo_total, uint16_t color_transparente) {
-    int ancho_total_sprite = w * 2; // Suponiendo 2 frames
+    int ancho_total_sprite = w * 2;
     int inicio_frame = frame * w;
 
     for (int j = 0; j < h; j++) {
         for (int i = 0; i < w; i++) {
-            // Index del píxel dentro del sprite (Chewbacca)
+            // Index del píxel dentro del sprite
             uint32_t sprite_idx = (uint32_t)(j * ancho_total_sprite) + inicio_frame + i;
             uint16_t sprite_pixel = sprite_map[sprite_idx];
 
             if (sprite_pixel == color_transparente) {
-                // EXPLICACIÓN: Calculamos la posición exacta en el mapa de bits del fondo
+                // EXPLICACIÓN: Se calucla la posición exacta en el mapa de bits del fondo
                 // Si esto falla, el fondo se ve "corrido" o con ruido
                 uint32_t fondo_idx = (uint32_t)(y + j) * (uint32_t)ancho_fondo_total + (x + i);
                 sprite_buffer[j * w + i] = fondo_global[fondo_idx];
@@ -462,4 +466,183 @@ void LCD_DibujarSpriteBuffer(int x, int y, int w, int h, const uint16_t *sprite_
     }
     // Enviamos el bloque mezclado a la LCD
     LCD_Bitmap(x, y, w, h, sprite_buffer);
+}
+
+//***************************************************************************************************************************************
+// Función para dibujar una imagen a partir de un arreglo de colores (Bitmap) optimizada empleando DMA
+//***************************************************************************************************************************************
+extern volatile uint8_t dma_libre;
+void LCD_Bitmap_DMA(uint16_t x, uint16_t y, uint16_t width, uint16_t height, const uint16_t *bitmap) {
+    // 1. Definir la ventana de dibujo
+    SetWindows(x, y, x + width - 1, y + height - 1);
+
+    // 2. Configurar pines para envío de datos
+    LCD_DC_H();
+    LCD_CS_L();
+
+    // 3. El tamaño máximo de una transferencia DMA en STM32 suele ser 65535 unidades.
+    // Para un bitmap de 16x36 esto no es problema (1152 bytes).
+    uint32_t total_bytes = (uint32_t)width * height * 2;
+
+    dma_libre = 0;
+
+    // 4. Transmisión DMA
+    // El cast a (uint8_t*) es necesario para que HAL trate el buffer como bytes
+    if (HAL_SPI_Transmit_DMA(&hspi1, (uint8_t*)bitmap, (uint16_t)total_bytes) != HAL_OK) {
+        Error_Handler();
+    }
+
+    // 5. Esperar a que el hardware termine antes de subir CS
+    while (dma_libre == 0);
+
+    LCD_CS_H();
+}
+
+//***************************************************************************************************************************************
+// Función para dibujar un sprite con transparencia (Versión Universal)
+// De igual forma el código es referenciado y modificado de un código de Arduino
+// Recopilado de: https://www.youtube.com/watch?v=U4jOFLFNZBI&t=7s
+// Github: https://github.com/VolosR/SpritesTuT
+//***************************************************************************************************************************************
+void LCD_DibujarSpriteUniversal(int x, int y, int w, int h, const uint16_t *sprite_map, int frame, int ancho_ss, const uint16_t *fondo_global, int ancho_fondo_total, uint16_t color_transparente, uint16_t *buffer_dest) {
+    int inicio_frame = frame * w;
+
+    for (int j = 0; j < h; j++) {
+        for (int i = 0; i < w; i++) {
+            uint32_t sprite_idx = (uint32_t)(j * ancho_ss) + inicio_frame + i;
+            uint16_t sprite_pixel = sprite_map[sprite_idx];
+            uint16_t final_pixel;
+
+            if (sprite_pixel == color_transparente) {
+                uint32_t fondo_idx = (uint32_t)(y + j) * (uint32_t)ancho_fondo_total + (x + i);
+                final_pixel = fondo_global[fondo_idx];
+            } else {
+                final_pixel = sprite_pixel;
+            }
+
+            buffer_dest[j * w + i] = (final_pixel << 8) | (final_pixel >> 8);
+        }
+    }
+    while(!dma_libre); // Esperar a que el DMA anterior termine
+    LCD_Bitmap_DMA(x, y, w, h, buffer_dest);
+}
+//***************************************************************************************************************************************
+// Función para dibujar realizar la cinematica de abordar naves
+//***************************************************************************************************************************************
+void EjecutarAnimacion(DatosPersonaje p) {
+    uint16_t colorTrans = 0xffe0;
+
+    for (int y = 200; y >= p.yStop; y--) {
+        int anim = (y / 10) % 2;
+        LCD_DibujarSpriteBuffer(p.posX, y, p.ancho, p.alto, p.sprite, anim, p.fondo, 320, colorTrans);
+
+        if (y < 200) {
+            uint32_t offset = (uint32_t)(y + p.alto) * 320 + p.posX;
+            LCD_Bitmap(p.posX, y + p.alto, p.ancho, 1, (uint16_t*)&p.fondo[offset]);
+        }
+        HAL_Delay(25);
+    }
+
+    // --- ELIMINACIÓN FINAL ---
+    					    for (int j = 0; j < p.alto; j++) {
+    					        for (int i = 0; i < p.ancho; i++) {
+    					            uint32_t idx = (uint32_t)(p.yStop + j) * 320 + (p.posX + i);
+    					            sprite_buffer[j * p.ancho + i] = p.fondo[idx];
+    					        }
+    					    }
+    					    LCD_Bitmap(p.posX, p.yStop, p.ancho, p.alto, sprite_buffer);
+}
+//***************************************************************************************************************************************
+// Función para dibujar enemigos
+//***************************************************************************************************************************************
+extern uint16_t buffer_mezcla[35 * 35];
+void ProcesarEnemigo(NaveEnemiga *e, int frame_enemigo, const uint16_t *spr_en, const uint16_t *spr_be,
+                     const uint16_t *fondo, uint16_t colorT, int offset_ms)
+{
+    int anchoE = 16; int altoE = 24;
+    int anchoB = 8;  int altoB = 23;
+
+    e->oldX = e->x;
+    e->x += (e->direccion * 2);
+
+    if (e->x >= e->limite_der) { e->x = e->limite_der; e->direccion = -1; }
+    else if (e->x <= e->limite_izq) { e->x = e->limite_izq; e->direccion = 1; }
+
+    // --- LÓGICA DEL DISPARO CON DESFASE ---
+    if (!e->b_activo) {
+        // Restamos el offset al tiempo transcurrido solo para el primer disparo
+        // o para ajustar la cadencia base.
+        if (HAL_GetTick() - e->ultimo_disparo > (1800 - offset_ms)) {
+            e->bx = e->x + (anchoE / 2) - (anchoB / 2);
+            e->by = e->y + altoE;
+            e->dist_recorrida = 0;
+            e->b_activo = 1;
+            e->ultimo_disparo = HAL_GetTick();
+        }
+    } else {
+        // ... (resto de la lógica de movimiento de bala igual que antes) ...
+        e->oldBX = e->bx;
+        e->oldBY = e->by;
+        e->by += 8;
+        e->dist_recorrida += 8;
+
+        if (e->dist_recorrida > 140 || e->by > (240 - altoB)) { // ese 140 es la DISTANCIA que va a recorrer la bala
+            while(!dma_libre);
+            for (int r = 0; r < altoB; r++) {
+                for (int c = 0; c < anchoB; c++) {
+                    int cy = (e->oldBY + r >= 240) ? 239 : e->oldBY + r;
+                    uint32_t idx = (uint32_t)cy * 320 + (e->oldBX + c);
+                    buffer_mezcla[r * anchoB + c] = (fondo[idx] << 8) | (fondo[idx] >> 8);
+                }
+            }
+            LCD_Bitmap_DMA(e->oldBX, e->oldBY, anchoB, altoB, buffer_mezcla);
+            e->b_activo = 0;
+        }
+    }
+
+    // --- 4. BORRADO DE RASTROS ---
+
+    // A. Borrar rastro de la NAVE (16x24)
+    if (e->oldX != e->x) {
+        while(!dma_libre);
+        for (int r = 0; r < altoE; r++) {
+            for (int c = 0; c < anchoE; c++) {
+                uint32_t idx = (uint32_t)(e->y + r) * 320 + (e->oldX + c);
+                buffer_mezcla[r * anchoE + c] = (fondo[idx] << 8) | (fondo[idx] >> 8);
+            }
+        }
+        LCD_Bitmap_DMA(e->oldX, e->y, anchoE, altoE, buffer_mezcla);
+    }
+
+    // B. Borrar rastro del BLASTER (8x23)
+    if (e->b_activo) {
+        while(!dma_libre);
+        for (int r = 0; r < altoB; r++) {
+            for (int c = 0; c < anchoB; c++) {
+                int cy = e->oldBY + r;
+                if (cy >= 0 && cy < 240) {
+                    uint32_t idx = (uint32_t)cy * 320 + (e->oldBX + c);
+                    buffer_mezcla[r * anchoB + c] = (fondo[idx] << 8) | (fondo[idx] >> 8);
+                }
+            }
+        }
+        LCD_Bitmap_DMA(e->oldBX, e->oldBY, anchoB, altoB, buffer_mezcla);
+    }
+
+    // --- 5. DIBUJADO ---
+
+    // Dibujar Nave (Ancho total 32: 16x2 frames)
+    while(!dma_libre);
+    LCD_DibujarSpriteUniversal(e->x, e->y, anchoE, altoE, spr_en, frame_enemigo, 32, fondo, 320, colorT, buffer_mezcla);
+
+    // Dibujar Blaster (Ancho total 32: 8x4 frames)
+    if (e->b_activo) {
+        // Cambia frame cada 30px recorridos
+        int frame_b = e->dist_recorrida / 35; // Este numero es la DISTANCIA / 4 para ver los frames
+        if (frame_b > 3) frame_b = 3;
+
+        while(!dma_libre);
+        // Ancho total del sprite sheet de blasters ahora es 32 (8x4)
+        LCD_DibujarSpriteUniversal(e->bx, e->by, anchoB, altoB, spr_be, frame_b, 32, fondo, 320, colorT, buffer_mezcla);
+    }
 }
