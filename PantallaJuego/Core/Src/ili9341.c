@@ -6,7 +6,7 @@
  */
 #include <stdlib.h> // malloc()
 #include <string.h> // memset()
-//#include "stm32f4xx_ll_spi.h"
+#include "stm32f4xx_ll_spi.h"
 #include "stm32f4xx_ll_bus.h"
 #include "stm32f4xx_ll_gpio.h"
 #include "pgmspace.h"

@@ -109,7 +109,7 @@ int main(void)
 	FillRect(70, 60, 20, 20, 0x07E0);
 	FillRect(90, 60, 20, 20, 0x001F);
 
-	LCD_BitmapTransparent(100, 100, 32, 36, chuwe, 0xff);
+	LCD_BitmapTransparent(100, 100, 32, 36, chuwe,0xfff4);
 //	FillRect(0, 0, 319, 206, 0x421b);
 //
 	//LCD_Print("Hola Mundo", 20, 100, 2, 0x001F, 0xCAB9);
@@ -119,7 +119,7 @@ int main(void)
 
 	//LCD_Bitmap(unsigned int x, unsigned int y, unsigned int width, unsigned int height, unsigned char bitmap[]);
 	//LCD_Bitmap(0, 0, 320, 240, fondo);
-
+/*
 	for (int x = 0; x < 319; x++) {
 		LCD_Bitmap(x, 116, 15, 15, tile);
 		LCD_Bitmap(x, 68, 15, 15, tile);
@@ -127,7 +127,7 @@ int main(void)
 		LCD_Bitmap(x, 223, 15, 15, tile);
 		x += 15;
 	}
-
+*/
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -227,7 +227,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -362,7 +362,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(RESET_PT_GPIO_Port, RESET_PT_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, DC_PT_Pin|MISO_PT_Pin|MOSI_PT_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, DC_PT_Pin|SCK_PT_Pin|MISO_PT_Pin|MOSI_PT_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, CS_PT_Pin|CS_PTB6_Pin, GPIO_PIN_RESET);
@@ -374,18 +374,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(RESET_PT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : DC_PT_Pin MISO_PT_Pin MOSI_PT_Pin */
-  GPIO_InitStruct.Pin = DC_PT_Pin|MISO_PT_Pin|MOSI_PT_Pin;
+  /*Configure GPIO pins : DC_PT_Pin SCK_PT_Pin MISO_PT_Pin MOSI_PT_Pin */
+  GPIO_InitStruct.Pin = DC_PT_Pin|SCK_PT_Pin|MISO_PT_Pin|MOSI_PT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : SCK_PT_Pin */
-  GPIO_InitStruct.Pin = SCK_PT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(SCK_PT_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : CS_PT_Pin CS_PTB6_Pin */
   GPIO_InitStruct.Pin = CS_PT_Pin|CS_PTB6_Pin;
