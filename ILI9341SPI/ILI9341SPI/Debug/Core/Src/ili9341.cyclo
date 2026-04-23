@@ -15,4 +15,4 @@
 ../Core/Src/ili9341.c:475:6:LCD_Bitmap_DMA	3
 ../Core/Src/ili9341.c:507:6:LCD_DibujarSpriteUniversal	5
 ../Core/Src/ili9341.c:532:6:EjecutarAnimacion	5
-../Core/Src/ili9341.c:559:6:ProcesarEnemigo	24
+../Core/Src/ili9341.c:559:6:ProcesarEnemigo	25

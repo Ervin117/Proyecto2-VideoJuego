@@ -562,6 +562,8 @@ void ProcesarEnemigo(NaveEnemiga *e, int frame_enemigo, const uint16_t *spr_en, 
     int anchoE = 16; int altoE = 24;
     int anchoB = 8;  int altoB = 23;
 
+    if (e->y < 0) return;
+
     e->oldX = e->x;
     e->x += (e->direccion * 2);
 
@@ -578,6 +580,10 @@ void ProcesarEnemigo(NaveEnemiga *e, int frame_enemigo, const uint16_t *spr_en, 
             e->dist_recorrida = 0;
             e->b_activo = 1;
             e->ultimo_disparo = HAL_GetTick();
+            extern UART_HandleTypeDef huart5;
+            //HAL_UART_Transmit(&huart5, (uint8_t*)"6", 1, 10);
+            //extern UART_HandleTypeDef huart2; // Asegura que la función conozca huart2
+            //HAL_UART_Transmit(&huart2, (uint8_t*)"6", 1, 10);
         }
     } else {
         // ... (resto de la lógica de movimiento de bala igual que antes) ...
@@ -586,7 +592,7 @@ void ProcesarEnemigo(NaveEnemiga *e, int frame_enemigo, const uint16_t *spr_en, 
         e->by += 8;
         e->dist_recorrida += 8;
 
-        if (e->dist_recorrida > 140 || e->by > (240 - altoB)) { // ese 140 es la DISTANCIA que va a recorrer la bala
+        if (e->dist_recorrida > 210 || e->by > (240 - altoB)) { // ese 140 es la DISTANCIA que va a recorrer la bala
             while(!dma_libre);
             for (int r = 0; r < altoB; r++) {
                 for (int c = 0; c < anchoB; c++) {

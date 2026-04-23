@@ -82,11 +82,13 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart2;
+UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-
+volatile uint8_t dat = 0;
 //================ Para reproducir música=================
 int main_theme_notes[] = {
   // --- Tema Principal (Frase 1) ---
@@ -367,11 +369,14 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM3_Init(void);
+static void MX_USART3_UART_Init(void);
 /* USER CODE BEGIN PFP */
 int presForFrequency(int frequency);
 void playTone(int *tone, int *duration, int *pause, int size);
-void playTonePRE(int *tone, int *duration, int *pause, int size);
 void noTone(void);
+void playTone2(int *tone, int *duration, int *pause, int size);
+void noTone2(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -393,6 +398,10 @@ void playTone(int *tone, int *duration, int *pause, int size)
 {
 	for (int i = 0; i < size; i++)
 	{
+		if (dat != 0) {
+			noTone();
+			return; // Sale de la canción actual inmediatamente
+		}
 		int prescaler = presForFrequency(tone[i]); // Calcular el prescaler
 		int dur = duration[i]; // Obtener la duración
 		int pauseBetweenTones = 0;
@@ -402,29 +411,11 @@ void playTone(int *tone, int *duration, int *pause, int size)
 		}
 
 		__HAL_TIM_SET_PRESCALER(&htim2, prescaler);
+		htim2.Instance->EGR = TIM_EGR_UG;
 		HAL_Delay(dur); // Duración de la nota
 		noTone(); // Pausa
 		HAL_Delay(pauseBetweenTones); // Duración sin tono
-	}
-}
-
-
-void playTonePRE(int *tone, int *duration, int *pause, int size)
-{
-	for (int i = 0; i < size; i++)
-	{
-		int prescaler = (tone[i]); // Calcular el prescaler
-		int dur = duration[i]; // Obtener la duración
-		int pauseBetweenTones = 0;
-		if (pause != NULL)
-		{
-			pauseBetweenTones = pause[i] - duration[i];
-		}
-
-		__HAL_TIM_SET_PRESCALER(&htim2, prescaler);
-		HAL_Delay(dur); // Duración de la nota
-		noTone(); // Pausa
-		HAL_Delay(pauseBetweenTones); // Duración sin tono
+		if (dat != 0) return;
 	}
 }
 
@@ -433,6 +424,34 @@ void noTone (void)
 	__HAL_TIM_SET_PRESCALER(&htim2, 0); // Prescaler 0
 }
 
+// --- Funciones para el Canal 2 (Timer 3) ---
+
+void playTone2(int *tone, int *duration, int *pause, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        int prescaler = presForFrequency(tone[i]);
+        int dur = duration[i];
+        int pauseBetweenTones = 0;
+        if (pause != NULL)
+        {
+            pauseBetweenTones = pause[i] - duration[i];
+        }
+
+        __HAL_TIM_SET_PRESCALER(&htim3, prescaler); // <--- CAMBIADO A HTIM3
+        htim3.Instance->EGR = TIM_EGR_UG;            // Forzar actualización inmediata
+
+        HAL_Delay(dur);
+        noTone2(); // <--- LLAMA A NOTONE2
+        HAL_Delay(pauseBetweenTones);
+    }
+}
+
+void noTone2 (void)
+{
+    __HAL_TIM_SET_PRESCALER(&htim3, 0); // <--- CAMBIADO A HTIM3
+    //htim3.Instance->EGR = TIM_EGR_UG;
+}
 /* USER CODE END 0 */
 
 /**
@@ -466,29 +485,66 @@ int main(void)
   MX_GPIO_Init();
   MX_TIM2_Init();
   MX_USART2_UART_Init();
+  MX_TIM3_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-
-
+  //HAL_UART_Receive_IT(&huart2, &dat, 1);
+  HAL_UART_Receive_IT(&huart3, &dat, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //Inicializo el timer y el canal correspondiente
-  playTone(main_theme_notes, main_theme_durations, NULL, (sizeof(main_theme_notes)/sizeof(main_theme_notes[0])));
-  playTone(cantina_notes, cantina_durations, NULL, (sizeof(cantina_notes)/sizeof(cantina_notes[0])));
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); //Inicializo el timer y el canal correspondiente
+  //playTone(main_theme_notes, main_theme_durations, NULL, (sizeof(main_theme_notes)/sizeof(main_theme_notes[0])));
+  //playTone(cantina_notes, cantina_durations, NULL, (sizeof(cantina_notes)/sizeof(cantina_notes[0])));
   //playTone(imperial_notes, imperial_durations, NULL, (sizeof(imperial_notes)/sizeof(imperial_notes[0])));
   //playTone(falcon_notes, falcon_durations, NULL, (sizeof(falcon_notes)/sizeof(falcon_notes[0])));
   //playTone(asteroid_notes, asteroid_durations, NULL, (sizeof(asteroid_notes)/sizeof(asteroid_notes[0])));
-  playTone(blaster_notes, blaster_durations, NULL, (sizeof(blaster_notes)/sizeof(blaster_notes[0])));
+  //playTone2(blaster_notes, blaster_durations, NULL, (sizeof(blaster_notes)/sizeof(blaster_notes[0])));
   //playTone(select_char_notes, select_char_durations, NULL, (sizeof(select_char_notes)/sizeof(select_char_notes[0])));
   //playTone(ship_engine_notes, ship_engine_durations, NULL, (sizeof(ship_engine_notes)/sizeof(ship_engine_notes[0])));
   //playTone(explosion_notes, explosion_durations, NULL, (sizeof(explosion_notes)/sizeof(explosion_notes[0])));
-  noTone(); //pausa
+  //noTone(); //pausa
   while (1)
   {
 	  //playTone(select_char_notes, select_char_durations, NULL, (sizeof(select_char_notes)/sizeof(select_char_notes[0])));
-
     /* USER CODE END WHILE */
+	  if (dat != 0) // Solo entra si se recibió algo nuevo
+	   {
+		   uint8_t comando = dat; // Guardamos el comando
+		   dat = 0;               // LIMPIAMOS la variable inmediatamente
+
+		   switch(comando)
+		   {
+		   	   case '0': // COMANDO DE SILENCIO
+					noTone();
+					noTone2();
+					break;
+			   case '1':
+				   playTone(cantina_notes, cantina_durations, NULL, (sizeof(cantina_notes)/sizeof(cantina_notes[0])));
+				   break;
+			   case '2':
+				   playTone2(explosion_notes, explosion_durations, NULL, (sizeof(explosion_notes)/sizeof(explosion_notes[0])));
+				   break;
+			   case '3': // inicio y cinematica naves
+				   playTone(main_theme_notes, main_theme_durations, NULL, (sizeof(main_theme_notes)/sizeof(main_theme_notes[0])));
+				   break;
+			   case '4': //nivel 1 y 2
+				   playTone(falcon_notes, falcon_durations, NULL, (sizeof(falcon_notes)/sizeof(falcon_notes[0])));
+				   break;
+			   case '5':
+				   playTone2(blaster_notes, blaster_durations, NULL, (sizeof(blaster_notes)/sizeof(blaster_notes[0])));
+				   break;
+			   case '6':
+				   playTone2(ship_engine_notes, ship_engine_durations, NULL, (sizeof(ship_engine_notes)/sizeof(ship_engine_notes[0])));
+				   break;
+			   case '7':
+				   playTone(imperial_notes, imperial_durations, NULL, (sizeof(imperial_notes)/sizeof(imperial_notes[0])));
+				   break;
+			   // Quitamos el default para que no sature la UART
+		   }
+	   }
 
     /* USER CODE BEGIN 3 */
   }
@@ -602,6 +658,65 @@ static void MX_TIM2_Init(void)
 }
 
 /**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 0;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 100-1;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 50;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+  HAL_TIM_MspPostInit(&htim3);
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -631,6 +746,39 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
+  * @brief USART3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART3_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART3_Init 0 */
+
+  /* USER CODE END USART3_Init 0 */
+
+  /* USER CODE BEGIN USART3_Init 1 */
+
+  /* USER CODE END USART3_Init 1 */
+  huart3.Instance = USART3;
+  huart3.Init.BaudRate = 115200;
+  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+  huart3.Init.StopBits = UART_STOPBITS_1;
+  huart3.Init.Parity = UART_PARITY_NONE;
+  huart3.Init.Mode = UART_MODE_TX_RX;
+  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART3_Init 2 */
+
+  /* USER CODE END USART3_Init 2 */
 
 }
 
@@ -674,7 +822,14 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if (huart->Instance == USART3) // Verifica que la interrupción sea del USART1
+	    {
+	 	 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+	 	 HAL_UART_Receive_IT(&huart3, &dat, 1);
+	    }
+}
 /* USER CODE END 4 */
 
 /**
