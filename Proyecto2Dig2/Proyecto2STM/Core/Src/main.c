@@ -91,18 +91,18 @@ UART_HandleTypeDef huart3;
 volatile uint8_t dat = 0;
 //================ Para reproducir música=================
 int main_theme_notes[] = {
-  // --- Tema Principal (Frase 1) ---
+  // --- Tema Principal (Fase 1) ---
   NOTE_F4, NOTE_F4, NOTE_F4, NOTE_AS4, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS5, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS5, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_DS5, NOTE_C5,
 
-  // Frase 2
+  // Fase 2
   NOTE_F4, NOTE_F4, NOTE_F4, NOTE_AS4, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS5, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS5, NOTE_F5,
   NOTE_DS5, NOTE_D5, NOTE_DS5, NOTE_C5,
-  // Frase 3
+  // Fase 3
   NOTE_F4, NOTE_F4, NOTE_G4, NOTE_G4,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS4, NOTE_AS4, NOTE_C5, NOTE_D5, NOTE_C5, NOTE_G4, NOTE_A4,
 
@@ -112,18 +112,18 @@ int main_theme_notes[] = {
   NOTE_F4, NOTE_F4, NOTE_G4, NOTE_G4,
   NOTE_DS5, NOTE_D5, NOTE_C5, NOTE_AS4, NOTE_AS4, NOTE_C5, NOTE_D5, NOTE_C5, NOTE_G4, NOTE_A4,
 
-  // Frase final
+  // Fase final
   NOTE_F5, NOTE_F5, NOTE_AS5, NOTE_GS5, NOTE_FS5, NOTE_F5, NOTE_DS5, NOTE_CS5, NOTE_C5, NOTE_AS4, NOTE_F5
 
 };
 
 int main_theme_durations[] = {
-  // Tema Principal (Frase 1)
+  // Tema Principal (Fase 1)
   CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
   CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
   CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
   CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA,
-  // (Frase 2)
+  // (Fase 2)
   CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
   CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
   CORCHEA, CORCHEA, CORCHEA, BLANCA + NEGRA, BLANCA + NEGRA,
@@ -138,12 +138,12 @@ int main_theme_durations[] = {
   NEGRA, NEGRA, BLANCA + NEGRA, NEGRA,
   CORCHEA, CORCHEA, CORCHEA, CORCHEA, TRESILLO, TRESILLO, TRESILLO, CORCHEA, CORCHEA, NEGRA,
 
-  // Frase final
+  // Fase final
   NEGRA, CORCHEA, NEGRA, CORCHEA, NEGRA, CORCHEA, NEGRA, CORCHEA, NEGRA, CORCHEA, REDONDA
 };
 
 int cantina_notes[] = {
-  // Frase 1
+  // Fase 1
   NOTE_A4, NOTE_D5, NOTE_A4, NOTE_D5, NOTE_A4, NOTE_D5, NOTE_A4, NOTE_GS4, NOTE_A4,0,
   NOTE_A4, NOTE_GS4, NOTE_A4, NOTE_G4, NOTE_FS4, NOTE_G4, NOTE_FS4, NOTE_F4, NOTE_D4,0,
 
@@ -170,7 +170,7 @@ int cantina_notes[] = {
 };
 
 int cantina_durations[] = {
-  // Frase 1
+  // Fase 1
   CORCHEA_C, CORCHEA_C, CORCHEA_C, CORCHEA_C, TRESILLO_C, CORCHEA_C, CORCHEA_C , TRESILLO_C, CORCHEA_C, SEPTICILLO_C,
   TRESILLO_C, TRESILLO_C, TRESILLO_C, CORCHEA_C, TRESILLO_C, TRESILLO_C, TRESILLO_C, CORCHEA_C, CORCHEA_C, CORCHEA_C,
 
@@ -438,19 +438,18 @@ void playTone2(int *tone, int *duration, int *pause, int size)
             pauseBetweenTones = pause[i] - duration[i];
         }
 
-        __HAL_TIM_SET_PRESCALER(&htim3, prescaler); // <--- CAMBIADO A HTIM3
-        htim3.Instance->EGR = TIM_EGR_UG;            // Forzar actualización inmediata
+        __HAL_TIM_SET_PRESCALER(&htim3, prescaler); // Cambio de timer3
+        htim3.Instance->EGR = TIM_EGR_UG;           // Forzar actualización inmediata
 
         HAL_Delay(dur);
-        noTone2(); // <--- LLAMA A NOTONE2
+        noTone2();
         HAL_Delay(pauseBetweenTones);
     }
 }
 
 void noTone2 (void)
 {
-    __HAL_TIM_SET_PRESCALER(&htim3, 0); // <--- CAMBIADO A HTIM3
-    //htim3.Instance->EGR = TIM_EGR_UG;
+    __HAL_TIM_SET_PRESCALER(&htim3, 0); //cambiar timer3
 }
 /* USER CODE END 0 */
 
@@ -494,30 +493,19 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); //Inicializo el timer y el canal correspondiente
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1); //Inicializo el timer y el canal correspondiente
-  //playTone(main_theme_notes, main_theme_durations, NULL, (sizeof(main_theme_notes)/sizeof(main_theme_notes[0])));
-  //playTone(cantina_notes, cantina_durations, NULL, (sizeof(cantina_notes)/sizeof(cantina_notes[0])));
-  //playTone(imperial_notes, imperial_durations, NULL, (sizeof(imperial_notes)/sizeof(imperial_notes[0])));
-  //playTone(falcon_notes, falcon_durations, NULL, (sizeof(falcon_notes)/sizeof(falcon_notes[0])));
-  //playTone(asteroid_notes, asteroid_durations, NULL, (sizeof(asteroid_notes)/sizeof(asteroid_notes[0])));
-  //playTone2(blaster_notes, blaster_durations, NULL, (sizeof(blaster_notes)/sizeof(blaster_notes[0])));
-  //playTone(select_char_notes, select_char_durations, NULL, (sizeof(select_char_notes)/sizeof(select_char_notes[0])));
-  //playTone(ship_engine_notes, ship_engine_durations, NULL, (sizeof(ship_engine_notes)/sizeof(ship_engine_notes[0])));
-  //playTone(explosion_notes, explosion_durations, NULL, (sizeof(explosion_notes)/sizeof(explosion_notes[0])));
-  //noTone(); //pausa
+
   while (1)
   {
-	  //playTone(select_char_notes, select_char_durations, NULL, (sizeof(select_char_notes)/sizeof(select_char_notes[0])));
-    /* USER CODE END WHILE */
 	  if (dat != 0) // Solo entra si se recibió algo nuevo
 	   {
 		   uint8_t comando = dat; // Guardamos el comando
-		   dat = 0;               // LIMPIAMOS la variable inmediatamente
+		   dat = 0;
 
 		   switch(comando)
 		   {
-		   	   case '0': // COMANDO DE SILENCIO
+		   	   case '0': //Silencio
 					noTone();
 					noTone2();
 					break;
@@ -826,8 +814,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if (huart->Instance == USART3) // Verifica que la interrupción sea del USART1
 	    {
-	 	 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	 	 HAL_UART_Receive_IT(&huart3, &dat, 1);
+	 	 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin); //Verificación de envio
+	 	 HAL_UART_Receive_IT(&huart3, &dat, 1); //Recepción de datos por UART
 	    }
 }
 /* USER CODE END 4 */

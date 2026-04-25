@@ -26,6 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+//Se incluyen todas las librerias que se van a utilizar.
 #include "fatfs_sd.h"
 #include "ili9341.h"
 #include "bitmaps.h"
@@ -45,7 +46,6 @@ uint32_t totolSpace, freeSpace;
 char buffer[100];
 
 // Implementación de estructura para las variables de interrupción provenientes del controls de PS4
-// Intento probarlas ya que facilita el código
 typedef struct {
     int arriba;
     int derecha;
@@ -60,7 +60,7 @@ typedef struct {
     int posX, posY, oldX, oldY;
     int ancho, alto;
     int frame_actual;
-    int old_frame;             //Para saber si resetear el sprite
+    int old_frame;             //Reseteo del sprite
     const uint16_t *sprite;
     uint16_t *buffer;
     int blaster_activo;
@@ -100,8 +100,9 @@ UART_HandleTypeDef huart3;
 /* USER CODE BEGIN PV */
 
 //--- Variables para selección de personajes ---------
-int cinematica = 0;								// Variable para llevar el registro de que parte del videojuego va
+int cinematica = 0;								// Variable para llevar el registro de que parte del videojuego esta ejecutando en el ciclo de la logica
 int colocar_fondo = 1;
+// Variables para reiniciar y llamar a los fondos en cada parte del codigo necesario.
 int fondo = 0;
 int fondo1 = 0;
 int fondo2 = 0;
@@ -112,6 +113,7 @@ int fondo6 = 0;
 int balas_por_sobrevivir = 40; // Cantidad de disparos que deben pasar
 int balas_lanzadas = 0;
 
+// Definición de variables para la logica del boss del juego (NIVEL 3)
 int bossHP = 10;
 int bossX = 110, bossY = 10, bossOldX;
 int bossDir = 1;
@@ -192,7 +194,6 @@ uint8_t data_ready_J2 = 0;       // Bandera
 
 //---- para UART en general -----
 uint8_t rxData = 0;
-int musica_enviada = -1;
 
 /* USER CODE END PV */
 
@@ -214,7 +215,7 @@ static void MX_UART5_Init(void);
 /* USER CODE BEGIN 0 */
 
 //********************************FUNCIONES VARIAS *********************************//
-//=================================Función corregir colores ==========================
+//=================================Función corregir colores de los archivo .bin==========================
 void FixColorEndianness(uint16_t *buffer, uint32_t size) {
     for (uint32_t i = 0; i < size; i++) {
         buffer[i] = (buffer[i] << 8) | (buffer[i] >> 8);
@@ -226,12 +227,11 @@ int colision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
 {
 	if (x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2)
 		{
-		//HAL_UART_Transmit(&huart5, (uint8_t*)"2", 1, 10);
 		uint16_t buffer_explo[32 * 26];
 		//Dibujar la explisión
 			 for (int frame = 0; frame < 4; frame++) {
-			        //LCD_Sprite(x2, y2, 32, 26, explo, 4, frame, 0, 0);
-				 	 LCD_DibujarSpriteUniversal(x2, y2, 32, 26, explo, frame, 128, stars, 320, colorTrans, buffer_explo);
+			        //Dibujo de la explosión con traparencia del fondo.
+				 	LCD_DibujarSpriteUniversal(x2, y2, 32, 26, explo, frame, 128, stars, 320, colorTrans, buffer_explo);
 			        HAL_Delay(30);
 			 }
 		//Limpiar la explosión
@@ -248,6 +248,7 @@ int colision(int x1, int y1, int w1, int h1, int x2, int y2, int w2, int h2)
 	return 0;
 }
 
+//================================= Función para dibujar los fondo desde la SD =======================================
 void fondos(char* nombre, uint16_t x, uint16_t y, uint16_t w, uint16_t h ){
 	FIL fil;
 	UINT bytesRead;
@@ -267,7 +268,7 @@ void fondos(char* nombre, uint16_t x, uint16_t y, uint16_t w, uint16_t h ){
 				HAL_GPIO_WritePin(SD_CS_GPIO_Port, SD_CS_Pin, GPIO_PIN_SET); // SD OFF
 				HAL_GPIO_WritePin(LCD_CS_GPIO_Port, LCD_CS_Pin, GPIO_PIN_RESET); // LCD ON
 
-				// Corregir colores (Si el Python ya lo da bien, prueba comentar esta linea si se ve raro)
+				// Corregir colores
 				FixColorEndianness(fila_buffer, w);
 
 				// Dibujar fila
@@ -328,16 +329,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	LCD_Init();
 	LCD_Clear(0x00);
-	//LCD_Print("Star wars", 20, 100, 2, 0x001F, 0xCAB9);
-/*
-	for (int x = 0; x < 319; x++) {
-		LCD_Bitmap(x, 116, 15, 15, tile);
-		LCD_Bitmap(x, 68, 15, 15, tile);
-		LCD_Bitmap(x, 207, 15, 15, tile);
-		LCD_Bitmap(x, 223, 15, 15, tile);
-		x += 15;
-	}
-	*/
+
 	 HAL_TIM_Base_Start_IT(&htim2); // Inicia el Timer 2 con Interrupciones
 
 	 HAL_UART_Receive_IT(&huart2, &rxData, 1); // Disparar interrupción cuando reciba un byte
@@ -387,10 +379,13 @@ int main(void)
 	 enemigos[2].limite_izq = 100;
 	 enemigos[2].limite_der = 200;
 
+
+	 // ==============================================================================
+	 //================================= Montar la SD  ===============================
+	 // ==============================================================================
 	 fres = f_mount(&fs, "", 1);
 	 if (fres == FR_OK) {
 		 HAL_Delay(100);
-		 //Dibujar_Imagen_Bin("stars.bin", 0, 0, 320, 240);
 	 } else {
 	 }
 
@@ -401,13 +396,13 @@ int main(void)
 
 	while (1) {
 		// ==================================================================================================
-		// ==================================INICIO===========================================
+		// ==================================INICIO=========================================================
 		// =================================================================================================
 
 		if (cinematica ==0){
 			if (fondo2 == 0) {
-				HAL_UART_Transmit(&huart5, (uint8_t*)"3", 1, 10);
-				fondos("lucasfilm.bin", 0, 0, 320, 240);
+				HAL_UART_Transmit(&huart5, (uint8_t*)"3", 1, 10); // Se llama a la música de inicio
+				fondos("lucasfilm.bin", 0, 0, 320, 240); // Se llama el fondo de inicio
 				HAL_Delay(100);
 				fondos("inicio.bin", 0, 0, 320, 240);
 				fondo2 = 1;
@@ -427,11 +422,10 @@ int main(void)
 		// ==================================================================================================
 		if (cinematica == 1){
 			if (fondo == 0) {
-				fondos("choose.bin", 0, 0, 320, 240);
-				HAL_UART_Transmit(&huart5, (uint8_t*)"1", 1, 10);
-				fondo = 1; // Ya no entraremos aquí en la siguiente vuelta
+				fondos("choose.bin", 0, 0, 320, 240); // Se llama al fondo de los porsonajes
+				HAL_UART_Transmit(&huart5, (uint8_t*)"1", 1, 10); // Envio de comando para el musica.
+				fondo = 1;
 			}
-		//fondos("choose.bin", 0,0,320,240); // Aqui debe de aparecer el fondo choose
 		// Lógica seleccion de personaje jugador 1
 		if(personaje_seleccionado_J1 == 0){
 			if(control.izquierda){
@@ -484,7 +478,8 @@ int main(void)
 
 		if (personaje_seleccionado_J1 && personaje_seleccionado_J2){
 			cinematica = 2;
-			HAL_UART_Transmit(&huart5, (uint8_t*)"0", 1, 10);
+			HAL_UART_Transmit(&huart5, (uint8_t*)"0", 1, 10); //Se envia para apagar la musica en cada sección no necesaria
+															  //Para cada cinematica o nivel
 		}
 
 
@@ -493,14 +488,12 @@ int main(void)
 			 // ==================================================================================================
 		}else if (cinematica == 2){
 			DatosPersonaje p;
-			HAL_UART_Transmit(&huart5, (uint8_t*)"3", 1, 10);
+			HAL_UART_Transmit(&huart5, (uint8_t*)"3", 1, 10); // Se llama a la musica de cinematica
 		    // Asignación de valores
 		    if (char_final == 2) { p.sprite = luke; p.fondo = borrador;  p.posX = 180; p.ancho = 14; p.alto = 30; p.yStop = 115; } // Cambiar p.fondo = xwing o halcon
 		    else if (char_final == 4) { p.sprite = piloto; p.fondo = borrador;  p.posX = 180; p.ancho = 14; p.alto = 30; p.yStop = 115; }
 
-		    // Ejecución
-		    //LCD_Bitmap(0, 0, 320, 240, p.fondo); // Dibujar el fondo una vez
-		    fondos("xwing.bin",0,0,320,240);
+		    fondos("xwing.bin",0,0,320,240);	 // Se llama al fondo correspondiente del jugador 1
 		    EjecutarAnimacion(p);                // Llamar a la lógica modular
 		    cinematica = 3;
 	}
@@ -511,9 +504,7 @@ int main(void)
 			if (char_final_J2 == 1)      { p.sprite = chewbacca; p.fondo = borrador; p.posX = 252; p.ancho = 16; p.alto = 36; p.yStop = 100; }
 			else if (char_final_J2 == 3) { p.sprite = han_solo;  p.fondo = borrador; p.posX = 252; p.ancho = 14; p.alto = 32; p.yStop = 100; }
 
-			// Ejecución
-			//LCD_Bitmap(0, 0, 320, 240, p.fondo); // Dibujar el fondo una vez
-			fondos("halcon.bin",0,0,320,240);
+			fondos("halcon.bin",0,0,320,240);	// Se llama el fondo correpondiente del jugador 2
 			EjecutarAnimacion(p);                // Llamar a la lógica modular
 
 			cinematica = 4;
@@ -525,16 +516,14 @@ int main(void)
 		// ==================================================================================================
 	else if (cinematica == 4){
 		if (fondo3 == 0) {
-			fondos("levels.bin", 0, 0, 320, 240); // Fondo con los 4 niveles dibujados
-			HAL_UART_Transmit(&huart5, (uint8_t*)"1", 1, 10);
+			fondos("levels.bin", 0, 0, 320, 240); // Fondo de la selección de niveles
+			HAL_UART_Transmit(&huart5, (uint8_t*)"1", 1, 10); // Se llama a la musica de selección
 			fondo3 = 1;
-			// Dibujar el cuadro inicial en el Nivel 1
-			//Rect(5, 80, 75, 80, 0xF800); // Coordenadas ejemplo para el primer cuadro
 		}
 
-        // --- MOVIMIENTO A LA DERECHA ---
+        // --- Moviento del cuadro a la derecha -----------
         if ((control.derecha || control_J2.derecha) && nivel_actual < 4) {
-            // 1. Borrar cuadro actual (X anterior)
+            // 1. Borrar cuadro actual
             int oldX = (nivel_actual == 1) ? 5 : (nivel_actual == 2) ? 84 : (nivel_actual == 3) ? 163 : 242;
             Rect(oldX, 51, 74, 174, 0x0000); Rect(oldX, 52, 74, 174, 0x0000);
             Rect(oldX, 53, 74, 174, 0x0000); Rect(oldX+1, 51, 74, 174, 0x0000); Rect(oldX+2, 51, 74, 174, 0x0000);
@@ -546,10 +535,10 @@ int main(void)
             Rect(newX, 51, 74, 174, 0x07E0); Rect(newX, 52, 74, 174, 0x07E0);
             Rect(newX, 53, 74, 174, 0x07E0); Rect(newX+1, 51, 74, 174, 0x07E0); Rect(newX+2, 51, 74, 174, 0x07E0);
 
-            HAL_Delay(200); // Evitar que el cursor corra muy rápido
+            HAL_Delay(200);
         }
 
-        // --- MOVIMIENTO A LA IZQUIERDA ---
+        // --- Movimiento del cuadro a la izquierda ---
         else if ((control.izquierda || control_J2.izquierda) && nivel_actual > 1) {
             // 1. Borrar cuadro actual
             int oldX = (nivel_actual == 1) ? 5 : (nivel_actual == 2) ? 84 : (nivel_actual == 3) ? 163 : 242;
@@ -566,11 +555,8 @@ int main(void)
             HAL_Delay(200);
         }
         if (control.cuadrado || control_J2.cuadrado) {
-			//nivel_confirmado = nivel_actual;
-			cinematica = 4 + nivel_actual;  // IR AL JUEGO
+			cinematica = 4 + nivel_actual;  // Depende de la posición del cuadro se selecciona el nivel.
 			HAL_UART_Transmit(&huart5, (uint8_t*)"0", 1, 10);
-			//fondo_listo = 0; // Resetear para que cargue el fondo del combate
-			//HAL_Delay(300);
         }
 
 	}
@@ -580,26 +566,24 @@ int main(void)
 		// ==================================================================================================
 
 
-
-
-
-	// ====================================	NIVEL 1 =============================================
+		//===========================================================================================
+		// ====================================	NIVEL 1 =============================================
+		//===========================================================================================
 	else if (cinematica == 5){
 		if (fondo4 == 0) {
-			fondos("nivel3.bin", 0, 0, 320, 240); // Fondo con los 4 niveles dibujados
+			fondos("nivel3.bin", 0, 0, 320, 240); // fondo del nivel
 			fondo4 = 1;
 			HAL_UART_Transmit(&huart5, (uint8_t*)"4", 1, 10);
-			// Dibujar el cuadro inicial en el Nivel 1
-			//Rect(5, 80, 75, 80, 0xF800); // Coordenadas ejemplo para el primer cuadro
+			// Reiniciar los jugadores y los enemigos
 			for (int i = 0; i < 2; i++) {
 				j[i].vivo = 1;
-				j[i].blaster_activo = 0; // <--- LIMPIAR BALA JUGADOR
+				j[i].blaster_activo = 0;
 				j[i].posX = (i == 0) ? 80 : 240;
 				j[i].posY = 180;
 			}
 
 			for (int e = 0; e < 3; e++) {
-				enemigos[e].b_activo = 0;      // <--- LIMPIAR BALA ENEMIGA (Fundamental)
+				enemigos[e].b_activo = 0;
 				enemigos[e].dist_recorrida = 0;
 				enemigos[e].ultimo_disparo = HAL_GetTick(); // Resetear reloj de disparos
 			}
@@ -613,10 +597,10 @@ int main(void)
 			j[1].posX = 240; j[1].posY = 180;
 			j[0].blaster_activo = 0; j[1].blaster_activo = 0;
 
-			// Enemigos lentos y solo dos
+			// Posición de los enemigos
 			enemigos[0].x = 10;  enemigos[0].y = 30; enemigos[0].direccion = 1;
 			enemigos[1].x = 290; enemigos[1].y = 70; enemigos[1].direccion = -1;
-			enemigos[2].y = -100; // Desactivado por completo
+			enemigos[2].y = -100;
 			for(int i=0; i<3; i++) { enemigos[i].limite_izq = 10; enemigos[i].limite_der = 290; }
 		}
 
@@ -631,7 +615,7 @@ int main(void)
 
 				PlayStationBuffer *ctrl = (i == 0) ? &control : &control_J2;
 
-				// 1. ASIGNACIÓN DE FRAME POR DEFECTO (Centro = 0)
+				// 1. ASIGNACIÓN DE FRAME
 				j[i].frame_actual = 0;
 
 				// 2. DETECCIÓN DE BOTONES
@@ -647,13 +631,13 @@ int main(void)
 				if (ctrl->arriba) j[i].posY -= velocidad;
 				if (ctrl->abajo)  j[i].posY += velocidad;
 
-				// 3. LÍMITES DE PANTALLA (Clamping para evitar crash)
+				// 3. LÍMITES DE PANTALLA
 				if (j[i].posX < 0) j[i].posX = 0;
 				if (j[i].posX > (320 - j[i].ancho)) j[i].posX = 320 - j[i].ancho;
 				if (j[i].posY < 120) j[i].posY = 120; // Ajustado para que no suban mucho
 				if (j[i].posY > (240 - j[i].alto)) j[i].posY = 240 - j[i].alto;
 
-				// 4. BORRADO DE RASTRO (Si se mueve o si cambia la inclinación)
+				// 4. BORRADO DE RASTRO
 				if (j[i].oldX != j[i].posX || j[i].oldY != j[i].posY || j[i].frame_actual != j[i].old_frame) {
 					while(!dma_libre);
 					for (int r = 0; r < j[i].alto; r++) {
@@ -663,22 +647,21 @@ int main(void)
 						}
 					}
 					LCD_Bitmap_DMA(j[i].oldX, j[i].oldY, j[i].ancho, j[i].alto, j[i].buffer);
-					j[i].old_frame = j[i].frame_actual; // Guardar para comparar en la siguiente vuelta
+					j[i].old_frame = j[i].frame_actual;
 				}
 
-			// Blaster Jugador (Uno a la vez)
+			// Logica para generar los blaster de los jugadores
 			if (ctrl->cuadrado && !j[i].blaster_activo) {
 				j[i].blaster_activo = 1;
 				j[i].blasterX = j[i].posX + (j[i].ancho/2) - 3;
 				j[i].blasterY = j[i].posY - 12;
-				//HAL_UART_Transmit(&huart5, (uint8_t*)"5", 1, 10);
 			}
 
 			if (j[i].blaster_activo) {
 				j[i].oldBX = (int)j[i].blasterX; j[i].oldBY = (int)j[i].blasterY;
 				j[i].blasterY -= 8;
 
-				// Borrar rastro blaster (Seguro)
+				// Borrar rastro blaster
 				while(!dma_libre);
 				for (int r = 0; r < altoB; r++) {
 					for (int c = 0; c < anchoB; c++) {
@@ -693,14 +676,14 @@ int main(void)
 			}
 		}
 
-		// ================= FASE 2: ENEMIGOS (VELOCIDAD NORMAL) =================
+		// ================= FASE 2: CONSTRUCCIÓN DE ENEMIGOS =================
 		for (int i = 0; i < 2; i++) {
 			if (enemigos[i].y < 0) continue;
 
-			// DISPARO CONTROLADO: Solo en bordes y centro
+			// CONTROL DE DISPARO
 			if (!enemigos[i].b_activo) {
 				int ex = enemigos[i].x;
-				// Dispara solo en: Extremo Izq (10), Centro (150), Extremo Der (290)
+				// Disparos en los extremos y a la mitad de la pantalla
 				if (ex <= 12 || ex >= 288 || (ex > 148 && ex < 155)) {
 					enemigos[i].bx = enemigos[i].x + 4;
 					enemigos[i].by = enemigos[i].y + 24;
@@ -708,7 +691,7 @@ int main(void)
 					enemigos[i].dist_recorrida = 0;
 				}
 			}
-			// La función ProcesarEnemigo mueve a velocidad normal (2px)
+			// La función ProcesarEnemigo mueve el enemigo a 2px
 			ProcesarEnemigo(&enemigos[i], i, enemigo, blaster_verde, stars, colorTrans, 0);
 		}
 
@@ -725,7 +708,7 @@ int main(void)
 				}
 				// Enemigo elimina a Jugador
 				if (enemigos[e].b_activo && colision(enemigos[e].bx, enemigos[e].by, 8, 23, j[i].posX, j[i].posY, j[i].ancho, j[i].alto)) {
-					// BORRAR AL JUGADOR DE LA PANTALLA INMEDIATAMENTE
+					// Borrado de jugadores.
 					while(!dma_libre);
 					for (int r = 0; r < j[i].alto; r++) {
 						for (int c = 0; c < j[i].ancho; c++) {
@@ -734,7 +717,7 @@ int main(void)
 						}
 					}
 					LCD_Bitmap_DMA(j[i].posX, j[i].posY, j[i].ancho, j[i].alto, j[i].buffer);
-					j[i].vivo = 0; // El jugador ya no se dibujará en Fase 4
+					j[i].vivo = 0; // El jugador se borra si es eliminado para no volverlo a generarse.
 				}
 			}
 		}
@@ -752,7 +735,7 @@ int main(void)
 		if (enemigos[0].y < 0 && enemigos[1].y < 0) {
 			HAL_Delay(500); LCD_Clear(0x0000);
 			HAL_UART_Transmit(&huart5, (uint8_t*)"0", 1, 10);
-			LCD_Print("VICTORY", 120, 110, 2, 0x07E0, 0x0000);
+			LCD_Print("VICTORY", 120, 110, 2, 0x07E0, 0x0000); // Se indica que el jugador ya gano.
 			HAL_Delay(2000);
 			cinematica = 6; fondo1 = 0; fondo4 = 0; // Pasar al nivel 2
 		}
@@ -760,41 +743,40 @@ int main(void)
 		if (j[0].vivo == 0 && j[1].vivo == 0) {
 			HAL_Delay(500); LCD_Clear(0x0000);
 			HAL_UART_Transmit(&huart5, (uint8_t*)"0", 1, 10);
-			LCD_Print("GAME OVER", 110, 110, 2, 0xF800, 0x0000);
+			LCD_Print("GAME OVER", 110, 110, 2, 0xF800, 0x0000); // se indica que le jugador perdio
 			HAL_Delay(2000);
-			cinematica = 4; // Regresar a selección
+			cinematica = 4; // Regresar a selección de niveles luego de perder
 			fondo = 0; fondo1 = 0; fondo2 = 0; fondo3 = 0; fondo4 = 0; fondo5 = 0; fondo6 = 0;
 		}
-		HAL_Delay(15); // Un poco más lento para que sea más fácil reaccionar
+		HAL_Delay(15); // Un poco más lento para que sea más fácil reaccionar a la pantalla.
 	}
 
 
 
 
-
-
-
-
+		//===========================================================================================
 		// ====================================	NIVEL 2 =============================================
+		//===========================================================================================
 	else if (cinematica == 6) {
 		if (fondo1 == 0) {
 			fondos("nivel3.bin", 0, 0, 320, 240);
 			HAL_UART_Transmit(&huart5, (uint8_t*)"4", 1, 10);
-			fondo1 = 1; // Ya no entraremos aquí en la siguiente vuelta
+			fondo1 = 1;
+			//inicialización de lo enemigos y de los jugadores
 			enemigos[0].x = 40;
-			enemigos[0].y = 30;  // <-- Volver a poner en pantalla
+			enemigos[0].y = 30;
 			enemigos[0].direccion = 1;
 			enemigos[0].b_activo = 0; // Limpiar balas viejas
 
 			// Enemigo 2
 			enemigos[1].x = 200;
-			enemigos[1].y = 50;  // <-- Volver a poner en pantalla
+			enemigos[1].y = 50;
 			enemigos[1].direccion = -1;
 			enemigos[1].b_activo = 0;
 
-			// Enemigo 3 (¡Actívalo si lo necesitas!)
+			// Enemigo 3
 			enemigos[2].x = 100;
-			enemigos[2].y = 10;  // <-- Volver a poner en pantalla
+			enemigos[2].y = 10;
 			enemigos[2].direccion = 1;
 			enemigos[2].b_activo = 0;
 
@@ -815,7 +797,7 @@ int main(void)
 
 		        PlayStationBuffer *ctrl = (i == 0) ? &control : &control_J2;
 
-		        // --- 1. MOVIMIENTO E INCLINACIÓN (0:Centro, 1:Izq, 2:Der) ---
+		        // --- 1. Movimiento de los jugadores---
 		        j[i].frame_actual = 0;
 		        if (ctrl->derecha)      { j[i].posX += velocidad; j[i].frame_actual = 2; }
 		        else if (ctrl->izquierda) { j[i].posX -= velocidad; j[i].frame_actual = 1; }
@@ -823,7 +805,7 @@ int main(void)
 		        if (ctrl->arriba) j[i].posY -= velocidad;
 		        if (ctrl->abajo)  j[i].posY += velocidad;
 
-		        // Límites de pantalla (Clamping)
+		        // Límites de pantalla
 		        if (j[i].posX < 0) j[i].posX = 0;
 		        if (j[i].posX > (320 - j[i].ancho)) j[i].posX = 320 - j[i].ancho;
 		        if (j[i].posY < 120) j[i].posY = 120;
@@ -848,11 +830,10 @@ int main(void)
 		            j[i].blasterX = j[i].posX + (j[i].ancho / 2) - 3;
 		            j[i].blasterY = j[i].posY - 12;
 		            j[i].dist_blaster = 0;
-		            //HAL_UART_Transmit(&huart5, (uint8_t*)"5", 1, 10);
 		        }
 
 		        if (j[i].blaster_activo) {
-		            // BORRAR rastro del blaster en su posición anterior (oldBX, oldBY)
+		            // Borrar rastro de la bala.
 		            while(!dma_libre);
 		            for (int r = 0; r < altoB; r++) {
 		                for (int c = 0; c < anchoB; c++) {
@@ -887,11 +868,11 @@ int main(void)
 	        if (!j[i].vivo) continue;
 
 	        for (int e = 0; e < 3; e++) {
-	            // ---- CASO A: JUGADOR GOLPEA A ENEMIGO ----
+	            // ---- JUGADOR GOLPEA A ENEMIGO ----
 	            if (j[i].blaster_activo) {
 	                if (colision((int)j[i].blasterX, (int)j[i].blasterY, anchoB, altoB, enemigos[e].x, enemigos[e].y, 16, 24)) {
 
-	                    // 1. Borrar rastro del blaster que chocó
+	                    // 1. Borrar rastro del blaster
 	                    while(!dma_libre);
 	                    for (int r = 0; r < altoB; r++) {
 	                        for (int c = 0; c < anchoB; c++) {
@@ -901,11 +882,12 @@ int main(void)
 	                    }
 	                    LCD_Bitmap_DMA(j[i].oldBX, j[i].oldBY, anchoB, altoB, j[i].b_buffer);
 
-	                    // 2. Borrar rastro del blaster verde del enemigo (si estaba disparando)
+	                    // 2. Borrar rastro del blaster del enemigo
 	                    if (enemigos[e].b_activo) {
 	                        while(!dma_libre);
-	                        for (int r = 0; r < 23; r++) { // 23 es alto de bala verde
-	                            for (int c = 0; c < 8; c++) { // 8 es ancho de bala verde
+	                        // Parametros de la bala del enemigo.
+	                        for (int r = 0; r < 23; r++) {
+	                            for (int c = 0; c < 8; c++) {
 	                                uint32_t idx = (uint32_t)(enemigos[e].by + r) * 320 + (enemigos[e].bx + c);
 	                                buffer_mezcla[r * 8 + c] = (stars[idx] << 8) | (stars[idx] >> 8);
 	                            }
@@ -914,17 +896,17 @@ int main(void)
 	                    }
 
 	                    j[i].blaster_activo = 0;
-	                    enemigos[e].b_activo = 0; // Se borra el disparo del enemigo muerto
-	                    enemigos[e].y = -50;      // Enemigo muere
+	                    enemigos[e].b_activo = 0;
+	                    enemigos[e].y = -50;
 	                    enemigos[e].x = rand() % 280;
 	                }
 	            }
 
-	            // ---- CASO B: BLASTER VERDE GOLPEA JUGADOR ----
+	            // ---- BLASTER VERDE GOLPEA JUGADOR ----
 	            if (enemigos[e].b_activo) {
 	                if (colision(enemigos[e].bx, enemigos[e].by, 8, 23, j[i].posX, j[i].posY, j[i].ancho, j[i].alto)) {
 
-	                    // 1. Borrar bala verde en punto de impacto
+	                    //Borrar bala verde en punto de impacto
 	                    while(!dma_libre);
 	                    for (int r = 0; r < 23; r++) {
 	                        for (int c = 0; c < 8; c++) {
@@ -934,7 +916,7 @@ int main(void)
 	                    }
 	                    LCD_Bitmap_DMA(enemigos[e].bx, enemigos[e].by, 8, 23, buffer_mezcla);
 
-	                    // 2. Borrar cuerpo del Jugador
+	                    //Borrar cuerpo del Jugador
 	                    while(!dma_libre);
 	                    for (int r = 0; r < j[i].alto; r++) {
 	                        for (int c = 0; c < j[i].ancho; c++) {
@@ -991,6 +973,7 @@ int main(void)
 	                                   stars, 320, colorTrans, j[i].buffer);
 
 	        if (j[i].blaster_activo) {
+	        	// dibujar blaster con fondo del nivvel
 	            LCD_DibujarSpriteUniversal((int)j[i].blasterX, (int)j[i].blasterY,
 	                                       anchoB, altoB, blaster, j[i].frame_blaster,
 	                                       28, stars, 320, colorTrans, j[i].b_buffer);
@@ -1005,24 +988,22 @@ int main(void)
 			HAL_Delay(100); // Pausa dramática
 			LCD_Clear(0x0000);
 			HAL_UART_Transmit(&huart5, (uint8_t*)"0", 1, 10);
-			LCD_Print("GAME OVER", 100, 110, 2, 0xF800, 0x0000);
+			LCD_Print("GAME OVER", 100, 110, 2, 0xF800, 0x0000); // Imprimir si se pierde
 			HAL_Delay(200);
-
-			// Regresar a Selección de Nivel (Escena 4)
-			cinematica = 4;
-			//fondo_listo = 0; // Usando tu variable única o reseteando todas
+			cinematica = 4; //Regresar el menu de selección
+			// Reseteo de todas las variables de fondos, para inicializarlas nuevamente.
 			fondo = 0; fondo1 = 0; fondo2 = 0; fondo3 = 0; fondo4 = 0; fondo5 = 0; fondo6 = 0;
 
-			// IMPORTANTE: Resetear las naves para el próximo intento
+			//Resetear las naves para el próximo intento
 			j[0].vivo = 1; j[1].vivo = 1;
 			j[0].posX = 80;  j[0].posY = 180;
 			j[1].posX = 240; j[1].posY = 180;
 		}
 
-		// --- Comprobar si todos los enemigos fueron eliminados ---
+		//Comprobar si todos los enemigos fueron eliminados
 		int enemigos_vivos = 0;
 		for (int e = 0; e < 3; e++) {
-			if (enemigos[e].y >= 0) { // Si la Y es mayor a 0, la nave sigue activa
+			if (enemigos[e].y >= 0) {
 				enemigos_vivos++;
 			}
 		}
@@ -1031,10 +1012,8 @@ int main(void)
 			HAL_Delay(100);
 			LCD_Clear(0x0000);
 			HAL_UART_Transmit(&huart5, (uint8_t*)"0", 1, 10);
-			LCD_Print("VICTORY!", 80, 110, 2, 0x07E0, 0x0000);
+			LCD_Print("VICTORY!", 80, 110, 2, 0x07E0, 0x0000);//Se imprime cuando se gana.
 			HAL_Delay(200);
-
-			// Pasar al siguiente nivel
 			cinematica = 7;
 		}
 	}
@@ -1045,11 +1024,12 @@ int main(void)
 
 
 
-
-	// ====================================	NIVEL 3 =============================================
+		//===========================================================================================
+		// ====================================	NIVEL 3 =============================================
+		//===========================================================================================
 	else if (cinematica == 7){
 			if (fondo5 == 0) {
-			fondos("nivel3.bin", 0, 0, 320, 240); // Fondo con los 4 niveles dibujados
+			fondos("nivel3.bin", 0, 0, 320, 240); //Se imprime el fondo del nivel.
 			HAL_UART_Transmit(&huart5, (uint8_t*)"7", 1, 10);
 			            fondo5 = 1;
 			            bossHP = 15; bossX = 135; bossY = 20; bossDir = 1;
@@ -1073,8 +1053,7 @@ int main(void)
 			            else if (ctrl->izquierda) { j[i].posX -= velocidad; j[i].frame_actual = 1; }
 			            if (ctrl->arriba) j[i].posY -= velocidad;
 			            if (ctrl->abajo)  j[i].posY += velocidad;
-
-			            // Clamping para no crashear
+			            // Logica para la creación de las naves y posicionamiento.
 			            if (j[i].posX < 0) j[i].posX = 0;
 			            if (j[i].posX > (320 - j[i].ancho)) j[i].posX = 320 - j[i].ancho;
 			            if (j[i].posY < 115) j[i].posY = 115;
@@ -1099,7 +1078,6 @@ int main(void)
 			                j[i].blasterX = j[i].posX + (j[i].ancho / 2) - 4;
 			                j[i].blasterY = j[i].posY - 12;
 			                j[i].dist_blaster = 0;
-			                //HAL_UART_Transmit(&huart5, (uint8_t*)"5", 1, 10);
 			            }
 
 			            if (j[i].blaster_activo) {
@@ -1126,13 +1104,13 @@ int main(void)
 			            }
 			        }
 
-			        // ================= FASE 2: LÓGICA DEL BOSS (50x50) =================
+			        // ================= FASE 2: LÓGICA DEL BOSS =================
 			        bossOldX = bossX;
 			        int bossV = 3;
 			        bossX += (bossDir * bossV);
 			        if (bossX > 265 || bossX < 5) bossDir *= -1;
 
-			        // Borrado de rastro del Boss (CORREGIDO)
+			        // Borrado de rastro del Boss
 			        if (bossOldX != bossX) {
 			            // Si va a la derecha, borra la franja izquierda. Si va a la izquierda, borra la derecha.
 			            int bx_limpiar = (bossDir == 1) ? bossOldX : bossOldX + 50 - bossV;
@@ -1146,7 +1124,7 @@ int main(void)
 			            LCD_Bitmap_DMA(bx_limpiar, bossY, bossV, 50, b_mezcla_boss);
 			        }
 
-			        // DISPAROS DEL BOSS (Lluvia controlada)
+			        // Disparos lluvia del boss
 			        for (int e = 0; e < 3; e++) {
 			            if (!enemigos[e].b_activo && rand() % 50 == 0) {
 			                enemigos[e].bx = bossX + 10 + (rand() % 30);
@@ -1170,7 +1148,7 @@ int main(void)
 			                }
 			                LCD_Bitmap_DMA(enemigos[e].oldBX, enemigos[e].oldBY, 8, 23, buffer_mezcla);
 
-			                // --- EL SECRETO: Borrar rastro si va a morir ---
+			                //Borrar rastro si va a morir
 			                if (enemigos[e].by > 225) {
 			                    // Dibujamos fondo una última vez antes de apagar la bala
 			                    LCD_Bitmap_DMA(enemigos[e].bx, enemigos[e].by, 8, 23, buffer_mezcla);
@@ -1197,7 +1175,7 @@ int main(void)
 			        }
 
 			        // ================= FASE 3: DIBUJADO FINAL =================
-			        //LCD_Bitmap(bossX, bossY, 50, 50, deathS);
+			        //Dibujar el boss con fondo transparente.
 			        LCD_DibujarSpriteUniversal(bossX, bossY, 50, 50, deathS, 0, 50, stars, 320, 0x0000, b_mezcla_boss);
 
 			        for (int i = 0; i < 2; i++) {
@@ -1211,34 +1189,35 @@ int main(void)
 			        // Victoria y Derrota
 			        if (bossHP <= 0) {
 			            HAL_Delay(500); LCD_Clear(0x0000);
-			            LCD_Print("VICTORY", 120, 110, 2, 0x07E0, 0x0000);
+			            LCD_Print("VICTORY", 120, 110, 2, 0x07E0, 0x0000); // Se imprime al ganar
 			            HAL_UART_Transmit(&huart5, (uint8_t*)"0", 1, 10);
-			            HAL_Delay(1500);
-			            cinematica = 8; fondo6 = 0; fondo5 = 0;
+			            HAL_Delay(150)
+			            cinematica = 8; fondo6 = 0; fondo5 = 0; // se pasa al siguinete nivel
 			        }
 			        if (j[0].vivo == 0 && j[1].vivo == 0) {
 			            HAL_Delay(500); LCD_Clear(0x0000);
-			            LCD_Print("GAME OVER", 110, 110, 2, 0xF800, 0x0000);
+			            LCD_Print("GAME OVER", 110, 110, 2, 0xF800, 0x0000); // Se imprime al perder
 			            HAL_UART_Transmit(&huart5, (uint8_t*)"0", 1, 10);
-			            HAL_Delay(1500);
-			            cinematica = 4; fondo = 0; fondo5 = 0; fondo3 = 0;
+			            HAL_Delay(150);
+			            cinematica = 4; fondo = 0; fondo5 = 0; fondo3 = 0; // Se regresa a la selección de nivle
 			        }
 			        HAL_Delay(15);
 			    }
 
-
-	// ====================================	NIVEL 4 =============================================
+		//===========================================================================================
+		// ====================================	NIVEL 4 =============================================
+		//===========================================================================================
   else if (cinematica == 8) {
 		if (fondo6 == 0) {
 			fondos("nivel3.bin", 0, 0, 320, 240);
 			HAL_UART_Transmit(&huart5, (uint8_t*)"7", 1, 10);
 			fondo6 = 1;
 			balas_lanzadas = 0;
-			balas_por_sobrevivir = 40;
+			balas_por_sobrevivir = 40; //Cantidad de balas por sobrevivir.
 			for(int i=0; i<2; i++) {
 				j[i].vivo = 1; j[i].blaster_activo = 0;
 				j[i].posX = (i == 0) ? 80 : 240;
-				j[i].posY = 40; // <--- JUGADORES AHORA INICIAN ARRIBA
+				j[i].posY = 40;
 				j[i].frame_actual = 0;
 				j[i].old_frame = 0;
 			}
@@ -1248,24 +1227,24 @@ int main(void)
 			}
 		}
 
-		// ================= FASE 1: JUGADORES (POSICIÓN SUPERIOR) =================
+		// ================= FASE 1: JUGADORES =================
 		for (int i = 0; i < 2; i++) {
 			if (!j[i].vivo) continue;
 			j[i].oldX = j[i].posX; j[i].oldY = j[i].posY;
 			PlayStationBuffer *ctrl = (i == 0) ? &control : &control_J2;
 
-			j[i].frame_actual = 0; // Recto
+			j[i].frame_actual = 0;
 			if (ctrl->derecha)      { j[i].posX += velocidad; j[i].frame_actual = 2; }
 			else if (ctrl->izquierda) { j[i].posX -= velocidad; j[i].frame_actual = 1; }
 
 			if (ctrl->arriba) j[i].posY -= velocidad;
 			if (ctrl->abajo)  j[i].posY += velocidad;
 
-			// LÍMITES SUPERIORES (Los jugadores se mueven en la mitad de arriba)
+			// Limites para los jugadores
 			if (j[i].posX < 0) j[i].posX = 0;
 			if (j[i].posX > (320 - j[i].ancho)) j[i].posX = 320 - j[i].ancho;
 			if (j[i].posY < 10) j[i].posY = 10;
-			if (j[i].posY > 100) j[i].posY = 100; // No bajan de la mitad
+			if (j[i].posY > 100) j[i].posY = 100; //No se pasan de la mitad
 
 			// Borrado de rastro
 			if (j[i].oldX != j[i].posX || j[i].oldY != j[i].posY || j[i].frame_actual != j[i].old_frame) {
@@ -1281,16 +1260,15 @@ int main(void)
 			}
 		}
 
-		// ================= FASE 2: LLUVIA INVERSA (DESDE ABAJO HACIA ARRIBA) =================
+		// ================= FASE 2: LLUVIA INVERSA =================
 		for (int e = 0; e < 3; e++) {
 			if (!enemigos[e].b_activo && balas_lanzadas < balas_por_sobrevivir) {
 				if (rand() % 40 == 0) {
 					enemigos[e].bx = rand() % 300;
-					enemigos[e].by = 240; // <--- INICIA EN EL BORDE INFERIOR
+					enemigos[e].by = 240;
 					enemigos[e].b_activo = 1;
 					enemigos[e].dist_recorrida = 0;
 					balas_lanzadas++;
-					//HAL_UART_Transmit(&huart5, (uint8_t*)"6", 1, 10);
 				}
 			}
 
@@ -1298,10 +1276,10 @@ int main(void)
 				enemigos[e].oldBX = enemigos[e].bx;
 				enemigos[e].oldBY = enemigos[e].by;
 
-				enemigos[e].by -= 7; // <--- SE MUEVE HACIA ARRIBA (Inverso)
+				enemigos[e].by -= 7;
 				enemigos[e].dist_recorrida += 7;
 
-				// 1. Borrado de rastro del blaster
+				//Borrado de rastro del blaster
 				while(!dma_libre);
 				for (int r = 0; r < 23; r++) {
 					for (int c = 0; c < 8; c++) {
@@ -1313,16 +1291,16 @@ int main(void)
 				}
 				LCD_Bitmap_DMA(enemigos[e].oldBX, enemigos[e].oldBY, 8, 23, buffer_mezcla);
 
-				// 2. Dibujar frame animado
+				//Dibujar frame animado
 				int frame_b = (enemigos[e].dist_recorrida / 15) % 4;
 				LCD_DibujarSpriteUniversal(enemigos[e].bx, enemigos[e].by, 8, 23,
 										   blaster_verde, frame_b, 32, stars, 320,
 										   colorTrans, buffer_mezcla);
 
-				// 3. Desactivar si sale por arriba
+				//Desactivar si sale por arriba
 				if (enemigos[e].by < -23) enemigos[e].b_activo = 0;
 
-				// 4. Colisión (El blaster viene desde abajo hacia los jugadores de arriba)
+				//Colisión
 				for (int i = 0; i < 2; i++) {
 					if (j[i].vivo && colision(enemigos[e].bx, enemigos[e].by, 8, 23, j[i].posX, j[i].posY, j[i].ancho, j[i].alto)) {
 						// Borrar jugador al morir
@@ -1353,17 +1331,20 @@ int main(void)
 		if (balas_lanzadas >= balas_por_sobrevivir && !enemigos[0].b_activo && !enemigos[1].b_activo && !enemigos[2].b_activo) {
 			HAL_Delay(500); LCD_Clear(0x0000);
 			HAL_UART_Transmit(&huart5, (uint8_t*)"0", 1, 10);
-			fondos("win.bin", 0, 0, 320, 240);
+			fondos("win.bin", 0, 0, 320, 240); // Imprimir fondo del ganador
 			HAL_Delay(150);
-			cinematica = 0; fondo = 0; fondo6 = 0; fondo3 = 0; fondo1 = 0; fondo2 = 0; fondo4 = 0; fondo5 = 0;
+			cinematica = 0; fondo = 0; fondo6 = 0; fondo3 = 0; fondo1 = 0; fondo2 = 0; fondo4 = 0; fondo5 = 0; // Se resetea todo para volver a jugar
+			//Reseteo de las selección de jugadores.
+			personaje_seleccionado_J1 = 0;
+			personaje_seleccionado_J2 = 0;
 		}
 
 		if (j[0].vivo == 0 && j[1].vivo == 0) {
 			HAL_Delay(500); LCD_Clear(0x0000);
 			HAL_UART_Transmit(&huart5, (uint8_t*)"0", 1, 10);
-			LCD_Print("GAME OVER", 110, 110, 2, 0xF800, 0x0000);
+			LCD_Print("GAME OVER", 110, 110, 2, 0xF800, 0x0000); // Se imprime al perder
 			HAL_Delay(150);
-			cinematica = 4; fondo = 0; fondo6 = 0; fondo3 = 0; fondo1 = 0; fondo2 = 0; fondo4 = 0; fondo5 = 0;
+			cinematica = 4; fondo = 0; fondo6 = 0; fondo3 = 0; fondo1 = 0; fondo2 = 0; fondo4 = 0; fondo5 = 0; // Se regresa al menu de selección de nivel
 		}
 		HAL_Delay(20);
 	}
