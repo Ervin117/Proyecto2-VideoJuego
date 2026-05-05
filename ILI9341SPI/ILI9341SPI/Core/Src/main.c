@@ -993,7 +993,6 @@ int main(void)
 			cinematica = 4; //Regresar el menu de selección
 			// Reseteo de todas las variables de fondos, para inicializarlas nuevamente.
 			fondo = 0; fondo1 = 0; fondo2 = 0; fondo3 = 0; fondo4 = 0; fondo5 = 0; fondo6 = 0;
-
 			//Resetear las naves para el próximo intento
 			j[0].vivo = 1; j[1].vivo = 1;
 			j[0].posX = 80;  j[0].posY = 180;
