@@ -3,6 +3,8 @@
 	<item key="hasShownOverlayPopupBefore" value="true"/>
 	<item key="replaceBarOpen" value="false"/>
 	<list key="searchhistory">
+		<item value="b_mezcla_boss"/>
+		<item value="LCD_DibujarSpriteUniversal"/>
 		<item value="dist_recorrida_bala"/>
 		<item value="EnemigoSimple"/>
 		<item value="LCD_DibujarSpriteBuffer"/>
@@ -16,7 +18,5 @@
 		<item value="MAX_ENEMIGOS"/>
 		<item value="buffer_blaster"/>
 		<item value="frame_blaster"/>
-		<item value="blaster_activo"/>
-		<item value="anchoB"/>
 	</list>
 </section>

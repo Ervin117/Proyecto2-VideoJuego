@@ -29,3 +29,6 @@ make: *** [Core/Src/subdir.mk:34: Core/Src/stm32f4xx_hal_msp.o] Error 1
 make: *** [Core/Src/subdir.mk:34: Core/Src/stm32f4xx_it.o] Error 1
 make: *** [Core/Src/subdir.mk:34: Core/Src/system_stm32f4xx.o] Error 1
 "make -j16 all" terminated with exit code 2. Build might be incomplete.
+
+20:12:54 Build Failed. 9 errors, 0 warnings. (took 269ms)
+
